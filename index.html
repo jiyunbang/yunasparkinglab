@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>주차쫄지마</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; font-family: 'Baloo 2', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #eef4ff; color: #222; }
+    header { background: linear-gradient(135deg, #6ebf66 0%, #4ea788 55%, #3b7fa2 100%); color: #fff; padding: 28px 20px 36px; text-align: center; position: relative; overflow: hidden; }
+    header::before { content: '🌳'; position: absolute; left: 12px; top: 22px; font-size: 2.4rem; }
+    header::after { content: '🚗'; position: absolute; right: 16px; top: 18px; font-size: 3rem; }
+    header h1 { margin: 0; font-size: 2rem; letter-spacing: -0.03em; text-shadow: 0 2px 8px rgba(0,0,0,.16); }
+    header p { margin: 10px auto 0; font-size: 1rem; max-width: 720px; color: rgba(255,255,255,.92); }
+    .hero { padding: 24px 24px 12px; max-width: 1080px; margin: 0 auto; }
+    .tagline { background: #fff; border-radius: 20px; box-shadow: 0 14px 35px rgba(15,40,112,.12); padding: 26px; }
+    .tagline h2 { margin-top: 0; font-size: 1.4rem; letter-spacing: -0.02em; }
+    .targets { display: flex; flex-wrap: wrap; gap: 14px; margin: 18px 0; }
+    .target { flex: 1 1 28%; min-width: 220px; background: linear-gradient(180deg, #ffffff 0%, #f5f8ff 100%); border: 1px solid #dfe7ff; border-radius: 18px; padding: 18px; box-shadow: 0 14px 30px rgba(0,0,0,.06); }
+    .target strong { display: block; margin-bottom: 10px; color: #23418a; font-size: 1rem; }
+    .target::before { content: '🚗'; display: inline-block; margin-right: 8px; }
+    .page-layout { display: grid; grid-template-columns: 280px 1fr; gap: 24px; align-items: start; }
+    .main-content { display: grid; gap: 24px; }
+    .sidebar { position: sticky; top: 20px; background: rgba(255,255,255,.98); border: 1px solid #dde6ff; border-radius: 26px; padding: 22px 18px; box-shadow: 0 18px 40px rgba(17,34,85,.08); }
+    .sidebar h2 { margin: 0 0 16px; font-size: 1.1rem; letter-spacing: -.02em; color: #13356b; }
+    .sidebar p { margin: 0 0 18px; font-size: 0.95rem; color: #3d4a72; line-height: 1.6; }
+    .scroll-target { scroll-margin-top: 120px; }
+    .tagline { background: #fff; border-radius: 20px; box-shadow: 0 14px 35px rgba(15,40,112,.12); padding: 26px; margin-bottom: 22px; }
+    .tagline p { margin: 0; color: #1c3464; font-size: 1rem; line-height: 1.7; }
+    .road-logo { display: block; margin: 10px auto 0; font-size: 1.35rem; letter-spacing: 0.24em; white-space: nowrap; }
+    .road-logo span { display: inline-block; padding: 0 6px; }
+    .nav-list { display: grid; gap: 12px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 18px; background: #f4f7ff; border: 1px solid #d8e2ff; color: #1d428a; font-weight: 700; text-decoration: none; transition: transform .18s ease, background .18s ease, border-color .18s ease; }
+    .nav-item:hover { background: #e5eeff; transform: translateX(2px); border-color: #aec5ff; }
+    .nav-item span.icon { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: #dbe6ff; font-size: 1rem; }
+    .road-logo { display: block; margin: 16px auto 0; font-size: 1.2rem; letter-spacing: 0.18em; white-space: nowrap; }
+    .road-logo span { display: inline-block; padding: 0 6px; }
+    #map { width: 100%; height: 420px; border-radius: 18px; overflow: hidden; background: #ddd; display: block; position: relative; }
+    .form-card { background: #fff; border-radius: 18px; padding: 24px; box-shadow: 0 12px 30px rgba(0,0,0,.05); }
+    .form-card label { display: grid; gap: 8px; font-weight: 600; color: #1d428a; }
+    .form-card label span.small { display: block; margin-top: 4px; font-size: 0.9rem; color: #5b6f93; }
+    .edit-note { margin: 10px 0 0; font-size: 0.92rem; color: #556; }
+    .speech-bubble { position: relative; margin-top: 18px; padding: 18px 18px 16px; border-radius: 22px; background: #fff; border: 1px solid #dbe2f4; box-shadow: 0 10px 24px rgba(17,34,85,.06); }
+    .speech-bubble::after { content: ''; position: absolute; bottom: -12px; left: 26px; border-width: 12px 12px 0 12px; border-style: solid; border-color: #fff transparent transparent transparent; }
+    .speech-bubble strong { display: block; margin-bottom: 10px; color: #1d428a; }
+    .speech-bubble p { margin: 0; color: #3b425b; line-height: 1.7; }
+    .form-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 10px; }
+    .secondary-button { padding: 12px 18px; border: 1px solid #a8b9f6; border-radius: 999px; background:#fff; color:#183e8d; cursor:pointer; transition: background .18s ease, transform .18s ease; }
+    .secondary-button:hover { background:#f4f7ff; transform: translateY(-1px); }
+    .card-actions { display:flex; flex-wrap: wrap; gap:10px; margin-top:16px; }
+    .card-actions button { flex:1 1 auto; padding: 10px 14px; border-radius: 999px; border: none; cursor: pointer; font-weight: 700; transition: transform .16s ease, opacity .16s ease; }
+    .card-actions button:hover { transform: translateY(-1px); opacity: .92; }
+    .edit-review { background:#4f7ce9; color:#fff; }
+    .delete-review { background:#f45b65; color:#fff; }
+    .speaker-note { font-size:0.95rem; color:#556; margin-top:8px; }
+    html { scroll-behavior: smooth; }
+    .map-placeholder { display: flex; align-items: center; justify-content: center; height: 100%; color: #556; font-size: 1.05rem; padding: 18px; text-align: center; }
+    .section { max-width: 1080px; margin: 24px auto; }
+    .form-card { background: #fff; border-radius: 18px; padding: 24px; box-shadow: 0 12px 30px rgba(0,0,0,.05); }
+    .form-card form { display: grid; gap: 18px; }
+    .form-card label { display: grid; gap: 8px; font-weight: 600; color: #1d428a; }
+    .form-card input[type="text"],
+    .form-card input[type="url"],
+    .form-card select,
+    .form-card textarea,
+    .form-card input[type="file"] { width: 100%; border: 1px solid #d7dbe7; border-radius: 12px; padding: 12px 14px; background: #fafbff; font-size: 0.97rem; }
+    .form-card textarea { resize: vertical; min-height: 120px; }
+    .review-grid { display: grid; grid-template-columns: repeat(2, minmax(180px, 1fr)); gap: 16px; }
+    .difficulty-badge { display: inline-flex; align-items: center; justify-content: center; padding: 6px 12px; border-radius: 999px; font-weight: 700; color: #fff; font-size: 0.95rem; letter-spacing: -.02em; }
+    .green-badge { background: #2bd35b; }
+    .yellow-badge { background: #f2a800; }
+    .red-badge { background: #f23c47; }
+    .form-card button { width: fit-content; padding: 12px 22px; border: none; border-radius: 999px; background: #1d428a; color: #fff; cursor: pointer; font-size: 1rem; transition: transform .18s ease, background .18s ease; }
+    .form-card button:hover { transform: translateY(-1px); background: #0f2f70; }
+    .saved-list { margin-top: 24px; display: grid; gap: 24px; }
+    .difficulty-group { background: rgba(255,255,255,.96); border: 1px solid #d9e4ff; border-radius: 24px; padding: 20px; box-shadow: 0 14px 32px rgba(17,34,85,.06); }
+    .group-title { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; font-size: 1.1rem; font-weight: 700; color: #1c2464; }
+    .group-title span { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 50%; background: rgba(29,66,138,.08); font-size: 1.1rem; }
+    .saved-card-grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+    .saved-item { border: 1px solid #e8ecf4; border-radius: 24px; padding: 22px; background: linear-gradient(180deg, #ffffff 0%, #eef4ff 100%); box-shadow: 0 18px 40px rgba(17,34,85,.08); }
+    .saved-item h4 { margin: 0 0 10px; font-size: 1.14rem; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .saved-item p { margin: 8px 0; font-size: 0.96rem; color: #333; line-height: 1.5; }
+    .saved-item small { color: #666; }
+    .photo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+    .photo-thumb { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 16px; border: 1px solid #dce4f2; box-shadow: inset 0 0 0 1px rgba(255,255,255,.6); }
+    .preview-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+    .preview-thumb { width: 100%; aspect-ratio: 4 / 3; border-radius: 14px; border: 2px dashed #aec5ff; background-size: cover; background-position: center; }
+    .saved-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+    .saved-meta span { display: inline-flex; align-items: center; justify-content: center; padding: 8px 12px; border-radius: 999px; background: rgba(255,255,255,.92); color: #334; font-size: 0.88rem; font-weight: 700; border: 1px solid rgba(29,66,138,.1); }
+    .data-list { background: #fff; border-radius: 18px; padding: 18px; box-shadow: 0 12px 30px rgba(0,0,0,.05); }
+    .data-list table { width: 100%; border-collapse: collapse; }
+    .data-list th, .data-list td { text-align: left; padding: 12px 10px; border-bottom: 1px solid #eee; }
+    .data-list th { background: #f4f7ff; color: #1d428a; }
+    .footer { background: #1d428a; color: #fff; padding: 16px; text-align: center; }
+    .loading { font-size: 0.95rem; color: #555; margin-top: 8px; }
+    @media (max-width: 720px) {
+      .targets { flex-direction: column; }
+      .target { min-width: auto; }
+      .review-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=YOUR_KAKAO_JS_KEY&libraries=services"></script>
+</head>
+<body>
+  <header>
+    <h1>주차쫄지마</h1>
+    <p>공덕동 경의선숲길 근처 초보운전자를 위한 주차장 추천</p>
+  </header>
+  <main class="hero">
+    <div class="page-layout">
+      <aside class="sidebar">
+        <h2>사이드 메뉴</h2>
+        <p>주차장 등록, 추천 위험도 영역으로 빠르게 이동하세요.</p>
+        <div class="nav-list">
+          <a class="nav-item" href="#register-section"><span class="icon">📝</span>주차장 등록</a>
+          <a class="nav-item" href="#green-section"><span class="icon">🟢</span>초록불</a>
+          <a class="nav-item" href="#orange-section"><span class="icon">🟠</span>주황불</a>
+          <a class="nav-item" href="#red-section"><span class="icon">🔴</span>빨강불</a>
+        </div>
+      </aside>
+      <div class="main-content">
+        <section class="section">
+          <div id="map">
+            <div class="map-placeholder">지도는 나중에 연결할게요. 현재는 주차장 등록과 리뷰를 먼저 작성할 수 있어요.</div>
+          </div>
+          <div class="loading" id="status">지도 연결 준비 중...</div>
+        </section>
+        <section class="section">
+          <div class="form-card" id="register-section">
+            <h2>주차장 등록 & 리뷰</h2>
+            <form id="review-form">
+              <label>
+                1) 주차장 장소:
+                <input type="text" id="place-name" placeholder="예: 공덕역 1번출구 주차장" required />
+              </label>
+              <label>
+                2) 위치 URL:
+                <input type="url" id="place-url" placeholder="https://map.kakao.com/..." required />
+              </label>
+              <label>
+                3) 사진:
+                <input type="file" id="place-photo" accept="image/*" multiple />
+                <span class="small">최대 3장, 자동 압축(최대 1200x900, JPEG 품질 0.75)</span>
+              </label>
+              <div id="photo-preview" class="preview-grid"></div>
+              <div id="edit-mode-note" class="speaker-note"></div>
+              <label>
+                4) 리뷰:
+                <textarea id="place-review" placeholder="자세한 주차장 경험을 적어주세요."></textarea>
+              </label>
+              <div class="review-grid">
+                <label>
+                  ㄴ 기계식 주차 여부:
+                  <select id="review-mechanical">
+                    <option value="없음">없음</option>
+                    <option value="있음">있음</option>
+                    <option value="모름">모름</option>
+                  </select>
+                </label>
+                <label>
+                  ㄴ 진입로:
+                  <select id="review-entry">
+                    <option value="넓음">넓음</option>
+                    <option value="보통">보통</option>
+                    <option value="좁음">좁음</option>
+                    <option value="매우 좁음">매우 좁음</option>
+                  </select>
+                </label>
+                <label>
+                  ㄴ 주차 간격:
+                  <select id="review-spacing">
+                    <option value="넓음">넓음</option>
+                    <option value="보통">보통</option>
+                    <option value="좁음">좁음</option>
+                  </select>
+                </label>
+                <label>
+                  ㄴ 주차공간이 항상 여유있는가:
+                  <select id="review-availability">
+                    <option value="항상 여유">항상 여유</option>
+                    <option value="가끔 여유">가끔 여유</option>
+                    <option value="자주 만차">자주 만차</option>
+                  </select>
+                </label>
+              </div>
+              <label>
+                ㄴ 난이도:
+                <select id="review-difficulty">
+                  <option value="초록불">초록불</option>
+                  <option value="주황불">주황불</option>
+                  <option value="빨강불">빨강불</option>
+                </select>
+              </label>
+              <div class="form-actions">
+                <button type="submit">주차장 등록하기</button>
+                <button type="button" id="cancel-edit" class="secondary-button" style="display:none;">수정 취소</button>
+              </div>
+            </form>
+            <div class="saved-list" id="saved-list"></div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+  <section class="section data-list">
+    <h2>공덕동 주차장 목록</h2>
+    <table>
+      <thead>
+        <tr><th>이름</th><th>주소</th><th>유형</th><th>면수</th><th>전화</th></tr>
+      </thead>
+      <tbody id="parking-table"></tbody>
+    </table>
+  </section>
+  <footer class="footer">주차쫄지마 &middot; 공덕동 주차장 정보</footer>
+
+  <script>
+    const parkingData = [
+      {name:'KPX빌딩', address:'마포구 공덕동 473-0', type:'BS', capacity:'105', phone:'', lat:37.54682876, lon:126.95264141},
+      {name:'공덕1-1 공영주차장(구)', address:'마포구 공덕동 11-243', type:'NW', capacity:'77', phone:'02-300-5046', lat:37.547386, lon:126.960882},
+      {name:'노벨리아서교 주차장', address:'마포구 공덕동 354-9', type:'BS', capacity:'68', phone:'', lat:37.553975, lon:126.920846},
+      {name:'마포 재정회관빌딩', address:'마포구 공덕동 253-42', type:'BS', capacity:'153', phone:'02-3274-2370', lat:37.546364, lon:126.953287},
+      {name:'마포신영지웰 주차장', address:'마포구 공덕동 461-0', type:'BS', capacity:'208', phone:'', lat:37.5438757, lon:126.95009648},
+      {name:'별정우체국연금관리단빌딩', address:'마포구 공덕동 254-8', type:'BS', capacity:'79', phone:'', lat:37.545954, lon:126.953002},
+      {name:'서울서부지방검찰청,서울서부지검', address:'마포구 공덕동 105-1', type:'BP', capacity:'20', phone:'02-3270-4545', lat:37.54941, lon:126.955508},
+      {name:'난지도길-1', address:'가양대로 110 ~ 성산동 665', type:'T', capacity:'285', phone:'', lat:37.5702447, lon:126.8901676},
+      {name:'난지도길-2', address:'성산동 665 ~ 가양대로 110', type:'T', capacity:'285', phone:'', lat:37.5686361, lon:126.8926011},
+      {name:'대흥로-1', address:'대흥로 94 ~ 대흥로 110', type:'T', capacity:'28', phone:'', lat:37.5487901, lon:126.9429008},
+      {name:'독막로-1', address:'독막로 16 ~ 독막로 24', type:'T', capacity:'13', phone:'', lat:37.5483188, lon:126.9159403},
+      {name:'만리재로-1', address:'공덕동 3-50 ~ 만리재로 85', type:'T', capacity:'50', phone:'', lat:37.5509354, lon:126.9614748},
+      {name:'만리재로-2', address:'만리재로 90 ~ 공덕동 3-57', type:'T', capacity:'50', phone:'', lat:37.5486419, lon:126.9596509},
+      {name:'만리재로-3', address:'만리재로 36 ~ 만리재로 48', type:'T', capacity:'14', phone:'', lat:37.5450916, lon:126.9556648},
+      {name:'백범로-1', address:'백범로 42 ~ 백범로 52', type:'T', capacity:'14', phone:'', lat:37.5507816, lon:126.9377844},
+      {name:'성암로-1', address:'상암동 1585 ~ 상암동 1585', type:'T', capacity:'15', phone:'', lat:37.5840054, lon:126.8859594},
+      {name:'신촌로-1', address:'신촌로 210 ~ 신촌로 216', type:'T', capacity:'12', phone:'', lat:37.5567843, lon:126.9489509}
+    ];
+
+    function initMap() {
+      const container = document.getElementById('map');
+      const options = { center: new kakao.maps.LatLng(37.5468, 126.9526), level: 5 };
+      const map = new kakao.maps.Map(container, options);
+
+      parkingData.forEach(item => {
+        const position = new kakao.maps.LatLng(item.lat, item.lon);
+        const marker = new kakao.maps.Marker({ position });
+        marker.setMap(map);
+        const infowindow = new kakao.maps.InfoWindow({ content: `<div style="padding:10px;font-size:14px;"><strong>${item.name}</strong><br>${item.address}<br>${item.type} / ${item.capacity}면</div>` });
+        kakao.maps.event.addListener(marker, 'click', function() { infowindow.open(map, marker); });
+      });
+
+      document.getElementById('status').textContent = '공덕동 주차장 데이터를 표시했습니다.';
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('parking-table');
+      tbody.innerHTML = parkingData.map(item => `
+        <tr>
+          <td>${item.name}</td>
+          <td>${item.address}</td>
+          <td>${item.type}</td>
+          <td>${item.capacity}</td>
+          <td>${item.phone || '-'}</td>
+        </tr>
+      `).join('');
+    }
+
+    function readFilesAsDataURLs(files) {
+      // Compress and limit images before returning data URLs to reduce localStorage usage
+      const maxPhotos = 3;
+      const maxWidth = 1200;
+      const maxHeight = 900;
+      const quality = 0.75;
+      const list = Array.from(files).slice(0, maxPhotos);
+      const compressImage = (file) => {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const img = new Image();
+            img.onload = () => {
+              let w = img.width;
+              let h = img.height;
+              const ratio = Math.min(1, Math.min(maxWidth / w, maxHeight / h));
+              w = Math.round(w * ratio);
+              h = Math.round(h * ratio);
+              const canvas = document.createElement('canvas');
+              canvas.width = w;
+              canvas.height = h;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, w, h);
+              try {
+                const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                resolve(dataUrl);
+              } catch (e) {
+                console.error('이미지 압축 실패', e);
+                resolve(null);
+              }
+            };
+            img.onerror = () => resolve(null);
+            img.src = reader.result;
+          };
+          reader.onerror = () => resolve(null);
+          reader.readAsDataURL(file);
+        });
+      };
+      return Promise.all(list.map(compressImage)).then(results => results.filter(Boolean));
+    }
+
+    async function updatePhotoPreview() {
+      const preview = document.getElementById('photo-preview');
+      const fileInput = document.getElementById('place-photo');
+      const files = fileInput.files;
+      if (!files || !files.length) {
+        preview.innerHTML = '';
+        return;
+      }
+      // readFilesAsDataURLs already compresses and limits to maxPhotos
+      const dataUrls = await readFilesAsDataURLs(files).catch(err => { console.error('preview read error', err); return []; });
+      if (!dataUrls.length) {
+        preview.innerHTML = '';
+        return;
+      }
+      preview.innerHTML = dataUrls.map(src => `<div class="preview-thumb" style="background-image:url('${src}')"></div>`).join('');
+    }
+
+    function renderSavedReviews() {
+      const savedList = document.getElementById('saved-list');
+      const reviews = JSON.parse(localStorage.getItem('parkingReviews') || '[]');
+      if (!reviews.length) {
+        savedList.innerHTML = '<p>등록된 리뷰가 아직 없습니다.</p>';
+        return;
+      }
+      const groups = { '초록불': [], '주황불': [], '빨강불': [] };
+      reviews.forEach((review, index) => {
+        const groupKey = groups[review.difficulty] ? review.difficulty : '빨강불';
+        groups[groupKey].push({ review, index });
+      });
+      const labels = { '초록불': '초록불 추천', '주황불': '주황불 주의', '빨강불': '빨강불 피하세요' };
+      const icons = { '초록불': '🟢', '주황불': '🟠', '빨강불': '🔴' };
+      const html = Object.entries(groups).map(([difficulty, items]) => {
+        if (!items.length) return '';
+        const sectionId = difficulty === '초록불' ? 'green-section' : difficulty === '주황불' ? 'orange-section' : 'red-section';
+        return `
+          <div class="difficulty-group" id="${sectionId}">
+            <div class="group-title"><span>${icons[difficulty]}</span>${labels[difficulty]} (${items.length})</div>
+            <div class="saved-card-grid">
+              ${items.map(({review, index}) => renderReviewCard(review, index)).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+      savedList.innerHTML = html;
+      attachReviewCardEvents();
+    }
+
+    function renderReviewCard(review, index) {
+      const badgeClass = review.difficulty === '초록불' ? 'green-badge' : review.difficulty === '주황불' ? 'yellow-badge' : 'red-badge';
+      const photoHtml = review.photos && review.photos.length ? `
+        <div class="photo-grid">
+          ${review.photos.map(src => `<img src="${src}" class="photo-thumb" loading="lazy" />`).join('')}
+        </div>
+      ` : '<p style="margin-top:10px;color:#556;font-size:0.95rem;">사진이 없어요. 다음에는 사진도 꼭 추가해주세요!</p>';
+      return `
+        <div class="saved-item" data-index="${index}">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+            <h4>${review.name}</h4>
+            <span class="difficulty-badge ${badgeClass}">${review.difficulty}</span>
+          </div>
+          <p><strong>위치:</strong> <a href="${review.url}" target="_blank" rel="noopener">${review.url}</a></p>
+          ${photoHtml}
+          <div class="saved-meta">
+            <span>기계식: ${review.mechanical}</span>
+            <span>진입로: ${review.entry}</span>
+            <span>간격: ${review.spacing}</span>
+            <span>여유: ${review.availability}</span>
+          </div>
+          <div class="speech-bubble">
+            <strong>리뷰</strong>
+            <p>${review.review || '-'}</p>
+          </div>
+          <p style="margin-top:12px;"><small>등록일: ${new Date(review.createdAt).toLocaleString()}</small></p>
+          <div class="card-actions">
+            <button type="button" class="edit-review" data-index="${index}">수정</button>
+            <button type="button" class="delete-review" data-index="${index}">삭제</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function attachReviewCardEvents() {
+      document.querySelectorAll('.edit-review').forEach(button => {
+        button.addEventListener('click', () => editReview(Number(button.dataset.index)));
+      });
+      document.querySelectorAll('.delete-review').forEach(button => {
+        button.addEventListener('click', () => deleteReview(Number(button.dataset.index)));
+      });
+    }
+
+    let currentEditIndex = -1;
+
+    function updateEditModeNote() {
+      const note = document.getElementById('edit-mode-note');
+      note.textContent = currentEditIndex >= 0 ? '현재 수정 모드입니다. 새 사진을 선택하지 않으면 기존 사진이 유지됩니다.' : '';
+    }
+
+    function resetFormState() {
+      currentEditIndex = -1;
+      document.getElementById('review-form').reset();
+      updatePhotoPreview();
+      updateEditModeNote();
+      document.getElementById('review-form').querySelector('button[type="submit"]').textContent = '주차장 등록하기';
+      document.getElementById('cancel-edit').style.display = 'none';
+    }
+
+    function editReview(index) {
+      const reviews = JSON.parse(localStorage.getItem('parkingReviews') || '[]');
+      const review = reviews[index];
+      if (!review) return;
+      currentEditIndex = index;
+      document.getElementById('place-name').value = review.name;
+      document.getElementById('place-url').value = review.url;
+      document.getElementById('place-review').value = review.review;
+      document.getElementById('review-mechanical').value = review.mechanical;
+      document.getElementById('review-entry').value = review.entry;
+      document.getElementById('review-spacing').value = review.spacing;
+      document.getElementById('review-availability').value = review.availability;
+      document.getElementById('review-difficulty').value = review.difficulty;
+      document.getElementById('review-form').querySelector('button[type="submit"]').textContent = '수정 저장';
+      document.getElementById('cancel-edit').style.display = 'inline-flex';
+      const preview = document.getElementById('photo-preview');
+      if (review.photos && review.photos.length) {
+        preview.innerHTML = review.photos.map(src => `<div class="preview-thumb" style="background-image:url('${src}')"></div>`).join('');
+      } else {
+        preview.innerHTML = '';
+      }
+      updateEditModeNote();
+      window.location.hash = '#register-section';
+    }
+
+    function deleteReview(index) {
+      if (!confirm('이 리뷰를 삭제하시겠어요?')) return;
+      const reviews = JSON.parse(localStorage.getItem('parkingReviews') || '[]');
+      reviews.splice(index, 1);
+      localStorage.setItem('parkingReviews', JSON.stringify(reviews));
+      renderSavedReviews();
+    }
+
+    async function handleFormSubmit(event) {
+      try {
+        event.preventDefault();
+        const name = document.getElementById('place-name').value.trim();
+        const url = document.getElementById('place-url').value.trim();
+        const review = document.getElementById('place-review').value.trim();
+        const mechanical = document.getElementById('review-mechanical').value;
+        const entry = document.getElementById('review-entry').value;
+        const spacing = document.getElementById('review-spacing').value;
+        const availability = document.getElementById('review-availability').value;
+        const difficulty = document.getElementById('review-difficulty').value;
+        const fileInput = document.getElementById('place-photo');
+        const photos = await readFilesAsDataURLs(fileInput.files).catch(err => { console.error('사진 읽기 실패', err); return []; });
+
+        if (!name) return alert('장소명을 입력해 주세요.');
+        if (!url) return alert('위치 URL을 입력해 주세요.');
+
+        const reviews = JSON.parse(localStorage.getItem('parkingReviews') || '[]');
+        const newReview = {
+          name,
+          url,
+          review,
+          mechanical,
+          entry,
+          spacing,
+          availability,
+          difficulty,
+          photos: photos.length ? photos : (currentEditIndex >= 0 ? (reviews[currentEditIndex] && reviews[currentEditIndex].photos) || [] : []),
+          createdAt: currentEditIndex >= 0 ? (reviews[currentEditIndex] && reviews[currentEditIndex].createdAt) || new Date().toISOString() : new Date().toISOString()
+        };
+
+        if (currentEditIndex >= 0) {
+          reviews[currentEditIndex] = newReview;
+          alert('주차장 리뷰가 수정되었습니다!');
+        } else {
+          reviews.unshift(newReview);
+          alert('주차장 리뷰가 등록되었습니다!');
+        }
+        try {
+          localStorage.setItem('parkingReviews', JSON.stringify(reviews));
+        } catch (e) {
+          console.error('localStorage setItem failed', e);
+          const isQuota = e && (e.name && e.name.toLowerCase().includes('quota') || e.code === 22 || e.number === -2147024882);
+          if (isQuota) {
+            // Try fallback: save without photos to reduce size
+            const noPhoto = reviews.map(r => Object.assign({}, r, { photos: [] }));
+            try {
+              localStorage.setItem('parkingReviews', JSON.stringify(noPhoto));
+              alert('저장용량 초과로 사진 없이 저장했습니다. 사진은 제거되었습니다.');
+            } catch (e2) {
+              console.error('fallback save failed', e2);
+              alert('저장 실패: 브라우저 저장공간이 부족합니다. 사진을 줄이거나 로컬스토리지를 정리하세요.');
+            }
+          } else {
+            throw e;
+          }
+        }
+        resetFormState();
+        renderSavedReviews();
+      } catch (err) {
+        console.error('handleFormSubmit error', err);
+        alert('등록 중 오류가 발생했습니다. 콘솔을 확인해 주세요.');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderTable();
+      document.getElementById('review-form').addEventListener('submit', handleFormSubmit);
+      document.getElementById('place-photo').addEventListener('change', updatePhotoPreview);
+      document.getElementById('cancel-edit').addEventListener('click', resetFormState);
+      renderSavedReviews();
+      if (window.kakao && kakao.maps) {
+        initMap();
+      } else {
+        document.getElementById('status').textContent = '지도를 연결할 준비가 되었습니다. 나중에 Kakao JS 키를 넣어 주세요.';
+      }
+    });
+  </script>
+</body>
+</html>
