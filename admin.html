@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>주차쫄지마 — 관리자</title>
+  <style>
+    @font-face {
+      font-family: 'Nadeuri';
+      src: url('./fonts/HakgyoansimNadeuri-B.ttf') format('truetype');
+      font-weight: 700; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Nadeuri';
+      src: url('./fonts/HakgyoansimNadeuri-L.ttf') format('truetype');
+      font-weight: 300; font-style: normal; font-display: swap;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100vh; font-family: 'Nadeuri', sans-serif; font-weight: 300; background: #F0EFE9; color: #1A1A1A; }
+
+    /* ── 로그인 화면 ── */
+    #login-screen {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 24px;
+    }
+    .login-card {
+      background: #fff; border-radius: 24px; padding: 48px 40px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.1); text-align: center; width: 100%; max-width: 360px;
+    }
+    .login-card .sign {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 56px; height: 56px; background: #4E7FD4; color: #fff;
+      font-size: 2rem; font-weight: 900; border-radius: 12px;
+      box-shadow: 3px 3px 0 rgba(0,0,0,.15); margin-bottom: 16px;
+    }
+    .login-card h1 { margin: 0 0 6px; font-size: 1.5rem; font-weight: 700; color: #1A1A1A; }
+    .login-card p { margin: 0 0 28px; font-size: 0.9rem; color: #888; font-weight: 300; }
+    .login-card input[type="password"] {
+      width: 100%; padding: 14px 16px; border: 1.5px solid #DDDBD3; border-radius: 12px;
+      font-size: 1rem; font-family: inherit; font-weight: 300; margin-bottom: 12px;
+      outline: none; transition: border-color .18s;
+    }
+    .login-card input:focus { border-color: #4E7FD4; box-shadow: 0 0 0 3px rgba(78,127,212,.15); }
+    .login-card button {
+      width: 100%; padding: 14px; border: none; border-radius: 12px;
+      background: #4E7FD4; color: #fff; font-size: 1rem; font-weight: 700;
+      font-family: inherit; cursor: pointer; transition: background .18s;
+    }
+    .login-card button:hover { background: #3A6EC0; }
+    .login-error { color: #E85050; font-size: 0.88rem; margin-top: 10px; display: none; }
+
+    /* ── 관리자 패널 ── */
+    #admin-panel { display: none; }
+    .admin-header {
+      background: #4E7FD4; color: #fff; padding: 20px 32px;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      border-bottom: 4px solid #FFD23F;
+    }
+    .admin-header-left { display: flex; align-items: center; gap: 12px; }
+    .admin-sign {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 38px; height: 38px; background: #fff; color: #4E7FD4;
+      font-size: 1.3rem; font-weight: 900; border-radius: 8px;
+      box-shadow: 2px 2px 0 rgba(0,0,0,.15);
+    }
+    .admin-header h1 { margin: 0; font-size: 1.4rem; font-weight: 700; }
+    .logout-btn {
+      padding: 8px 18px; border: 1.5px solid rgba(255,255,255,.5); border-radius: 999px;
+      background: transparent; color: #fff; font-size: 0.88rem; font-weight: 700;
+      font-family: inherit; cursor: pointer; transition: all .18s;
+    }
+    .logout-btn:hover { background: rgba(255,255,255,.15); }
+
+    .admin-body { padding: 28px 32px; max-width: 1400px; margin: 0 auto; }
+
+    .stats-bar {
+      display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;
+    }
+    .stat-chip {
+      background: #fff; border: 1px solid #E8E6DE; border-radius: 12px;
+      padding: 12px 20px; display: flex; align-items: center; gap: 8px;
+      font-size: 0.92rem; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    }
+    .stat-chip span { font-size: 1.1rem; }
+
+    .table-card {
+      background: #fff; border-radius: 20px; overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,.07); border: 1px solid #E8E6DE;
+    }
+    .table-toolbar {
+      padding: 16px 20px; border-bottom: 1px solid #F0EFE9;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    }
+    .table-toolbar h2 { margin: 0; font-size: 1rem; font-weight: 700; color: #1A1A1A; }
+    .refresh-btn {
+      padding: 8px 18px; border: 1.5px solid #E8E6DE; border-radius: 999px;
+      background: #F5F4EE; color: #333; font-size: 0.88rem; font-weight: 700;
+      font-family: inherit; cursor: pointer; transition: all .18s;
+    }
+    .refresh-btn:hover { background: #E8E6DE; }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    thead th {
+      background: #F5F4EE; padding: 12px 14px; text-align: left;
+      font-weight: 700; font-size: 0.82rem; color: #555; letter-spacing: .03em;
+      border-bottom: 2px solid #E8E6DE; white-space: nowrap;
+    }
+    tbody td {
+      padding: 12px 14px; border-bottom: 1px solid #F0EFE9;
+      vertical-align: middle; font-weight: 300;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: #FAFAF7; }
+    .td-name { font-weight: 700; max-width: 160px; }
+    .td-url a { color: #4E7FD4; text-decoration: none; font-size: 0.82rem; word-break: break-all; border-bottom: 1px dashed #ccc; }
+    .td-url a:hover { border-bottom-color: #4E7FD4; }
+    .td-review { max-width: 200px; color: #555; }
+    .td-review p { margin: 0; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .td-date { white-space: nowrap; color: #888; font-size: 0.8rem; }
+
+    .difficulty-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: 999px; font-size: 0.8rem; font-weight: 700; color: #fff; white-space: nowrap;
+    }
+    .green-badge { background: linear-gradient(135deg, #2ecc71, #12b47a); }
+    .yellow-badge { background: linear-gradient(135deg, #f9a825, #e67e00); }
+    .red-badge { background: linear-gradient(135deg, #ff5252, #d32f2f); }
+
+    .action-btn {
+      padding: 6px 14px; border: none; border-radius: 8px;
+      font-size: 0.82rem; font-weight: 700; font-family: inherit; cursor: pointer;
+      transition: transform .15s, opacity .15s; white-space: nowrap;
+    }
+    .action-btn:hover { transform: translateY(-1px); opacity: .9; }
+    .btn-edit { background: #4E7FD4; color: #fff; margin-right: 6px; }
+    .btn-delete { background: #ff5252; color: #fff; }
+    .td-actions { white-space: nowrap; }
+
+    .empty-row td { text-align: center; padding: 40px; color: #aaa; font-size: 0.95rem; }
+
+    /* ── 수정 모달 ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.45); z-index: 1000;
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #fff; border-radius: 24px; padding: 32px;
+      width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    }
+    .modal h2 { margin: 0 0 24px; font-size: 1.2rem; font-weight: 700; color: #1A1A1A; }
+    .modal label { display: grid; gap: 6px; margin-bottom: 16px; font-size: 0.9rem; font-weight: 700; color: #333; }
+    .modal input, .modal select, .modal textarea {
+      padding: 11px 13px; border: 1.5px solid #DDDBD3; border-radius: 10px;
+      font-size: 0.92rem; font-family: inherit; font-weight: 300; color: #1A1A1A; outline: none;
+      transition: border-color .18s;
+    }
+    .modal input:focus, .modal select:focus, .modal textarea:focus {
+      border-color: #4E7FD4; box-shadow: 0 0 0 3px rgba(78,127,212,.12);
+    }
+    .modal textarea { resize: vertical; min-height: 80px; }
+    .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 8px; justify-content: flex-end; }
+    .btn-save { padding: 12px 24px; border: none; border-radius: 999px; background: #4E7FD4; color: #fff; font-size: 0.95rem; font-weight: 700; font-family: inherit; cursor: pointer; transition: background .18s; }
+    .btn-save:hover { background: #3A6EC0; }
+    .btn-cancel { padding: 12px 20px; border: 1.5px solid #ccc; border-radius: 999px; background: #fff; color: #555; font-size: 0.95rem; font-weight: 700; font-family: inherit; cursor: pointer; transition: all .18s; }
+    .btn-cancel:hover { background: #F0EFE9; }
+
+    @media (max-width: 600px) {
+      .admin-body { padding: 16px; }
+      .admin-header { padding: 16px; }
+      .modal { padding: 20px; }
+      .modal-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+
+<!-- 로그인 화면 -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="sign">P</div>
+    <h1>관리자 로그인</h1>
+    <p>주차쫄지마 관리자 전용 페이지입니다.</p>
+    <input type="password" id="admin-pw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter') checkLogin()" />
+    <button onclick="checkLogin()">입장하기</button>
+    <p class="login-error" id="login-error">비밀번호가 틀렸습니다.</p>
+  </div>
+</div>
+
+<!-- 관리자 패널 -->
+<div id="admin-panel">
+  <div class="admin-header">
+    <div class="admin-header-left">
+      <span class="admin-sign">P</span>
+      <h1>주차쫄지마 관리자</h1>
+    </div>
+    <button class="logout-btn" onclick="logout()">로그아웃</button>
+  </div>
+
+  <div class="admin-body">
+    <div class="stats-bar" id="stats-bar">
+      <div class="stat-chip"><span>📋</span> 전체 <strong id="cnt-all">-</strong>개</div>
+      <div class="stat-chip"><span>🟢</span> 초록불 <strong id="cnt-green">-</strong>개</div>
+      <div class="stat-chip"><span>🟠</span> 주황불 <strong id="cnt-orange">-</strong>개</div>
+      <div class="stat-chip"><span>🔴</span> 빨강불 <strong id="cnt-red">-</strong>개</div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-toolbar">
+        <h2>등록된 주차장 전체 목록</h2>
+        <button class="refresh-btn" onclick="loadReviews()">🔄 새로고침</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>장소명</th>
+              <th>난이도</th>
+              <th>기계식</th>
+              <th>진입로</th>
+              <th>간격</th>
+              <th>여유</th>
+              <th>리뷰</th>
+              <th>등록일</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody id="reviews-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 수정 모달 -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <h2>✏️ 주차장 수정</h2>
+    <input type="hidden" id="edit-id" />
+    <label>장소명<input type="text" id="edit-name" /></label>
+    <label>Naver 지도 URL<input type="url" id="edit-url" /></label>
+    <div class="modal-grid">
+      <label>위도<input type="text" id="edit-lat" /></label>
+      <label>경도<input type="text" id="edit-lon" /></label>
+    </div>
+    <div class="modal-grid">
+      <label>난이도
+        <select id="edit-difficulty">
+          <option value="초록불">초록불</option>
+          <option value="주황불">주황불</option>
+          <option value="빨강불">빨강불</option>
+        </select>
+      </label>
+      <label>기계식
+        <select id="edit-mechanical">
+          <option value="없음">없음</option>
+          <option value="있음">있음</option>
+          <option value="모름">모름</option>
+        </select>
+      </label>
+      <label>진입로
+        <select id="edit-entry">
+          <option value="넓음">넓음</option>
+          <option value="보통">보통</option>
+          <option value="좁음">좁음</option>
+          <option value="매우 좁음">매우 좁음</option>
+        </select>
+      </label>
+      <label>주차 간격
+        <select id="edit-spacing">
+          <option value="넓음">넓음</option>
+          <option value="보통">보통</option>
+          <option value="좁음">좁음</option>
+        </select>
+      </label>
+    </div>
+    <label>여유
+      <select id="edit-availability">
+        <option value="항상 여유">항상 여유</option>
+        <option value="가끔 여유">가끔 여유</option>
+        <option value="자주 만차">자주 만차</option>
+      </select>
+    </label>
+    <label>리뷰<textarea id="edit-review"></textarea></label>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">취소</button>
+      <button class="btn-save" onclick="saveEdit()">저장하기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const ADMIN_PASSWORD = 'juchak2024'; // ← 비밀번호 여기서 변경
+  const SUPABASE_URL = 'https://ltqzwqirrasinhomudsl.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_o3AZ3XxmMxx6Xk857kV3pw_ZDTRnbDy';
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  function checkLogin() {
+    const pw = document.getElementById('admin-pw').value;
+    if (pw === ADMIN_PASSWORD) {
+      sessionStorage.setItem('admin_auth', '1');
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('admin-panel').style.display = 'block';
+      loadReviews();
+    } else {
+      document.getElementById('login-error').style.display = 'block';
+    }
+  }
+
+  function logout() {
+    sessionStorage.removeItem('admin_auth');
+    location.reload();
+  }
+
+  let allReviews = [];
+
+  async function loadReviews() {
+    const tbody = document.getElementById('reviews-tbody');
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="10">불러오는 중...</td></tr>';
+    const { data, error } = await sb.from('parking_reviews').select('*').order('created_at', { ascending: false });
+    if (error) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="10">❌ 데이터 불러오기 실패: ${error.message}</td></tr>`;
+      return;
+    }
+    allReviews = data || [];
+    renderTable(allReviews);
+    updateStats(allReviews);
+  }
+
+  function updateStats(reviews) {
+    document.getElementById('cnt-all').textContent = reviews.length;
+    document.getElementById('cnt-green').textContent = reviews.filter(r => r.difficulty === '초록불').length;
+    document.getElementById('cnt-orange').textContent = reviews.filter(r => r.difficulty === '주황불').length;
+    document.getElementById('cnt-red').textContent = reviews.filter(r => r.difficulty === '빨강불').length;
+  }
+
+  function badgeClass(d) {
+    return d === '초록불' ? 'green-badge' : d === '주황불' ? 'yellow-badge' : 'red-badge';
+  }
+
+  function renderTable(reviews) {
+    const tbody = document.getElementById('reviews-tbody');
+    if (!reviews.length) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="10">등록된 주차장이 없습니다.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = reviews.map((r, i) => `
+      <tr data-id="${r.id}">
+        <td>${i + 1}</td>
+        <td class="td-name">${r.name}</td>
+        <td><span class="difficulty-badge ${badgeClass(r.difficulty)}">${r.difficulty}</span></td>
+        <td>${r.mechanical || '-'}</td>
+        <td>${r.entry || '-'}</td>
+        <td>${r.spacing || '-'}</td>
+        <td>${r.availability || '-'}</td>
+        <td class="td-review"><p>${r.review || '-'}</p></td>
+        <td class="td-date">${r.created_at ? new Date(r.created_at).toLocaleDateString('ko') : '-'}</td>
+        <td class="td-actions">
+          <button class="action-btn btn-edit" onclick="openEdit('${r.id}')">수정</button>
+          <button class="action-btn btn-delete" onclick="deleteReview('${r.id}', '${r.name.replace(/'/g,"\\'")}')">삭제</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function openEdit(id) {
+    const r = allReviews.find(x => x.id === id);
+    if (!r) return;
+    document.getElementById('edit-id').value = r.id;
+    document.getElementById('edit-name').value = r.name || '';
+    document.getElementById('edit-url').value = r.url || '';
+    document.getElementById('edit-lat').value = r.lat || '';
+    document.getElementById('edit-lon').value = r.lon || '';
+    document.getElementById('edit-difficulty').value = r.difficulty || '초록불';
+    document.getElementById('edit-mechanical').value = r.mechanical || '없음';
+    document.getElementById('edit-entry').value = r.entry || '보통';
+    document.getElementById('edit-spacing').value = r.spacing || '보통';
+    document.getElementById('edit-availability').value = r.availability || '가끔 여유';
+    document.getElementById('edit-review').value = r.review || '';
+    document.getElementById('edit-modal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('edit-modal').classList.remove('open');
+  }
+
+  async function saveEdit() {
+    const id = document.getElementById('edit-id').value;
+    const updated = {
+      name: document.getElementById('edit-name').value.trim(),
+      url: document.getElementById('edit-url').value.trim(),
+      lat: parseFloat(document.getElementById('edit-lat').value) || null,
+      lon: parseFloat(document.getElementById('edit-lon').value) || null,
+      difficulty: document.getElementById('edit-difficulty').value,
+      mechanical: document.getElementById('edit-mechanical').value,
+      entry: document.getElementById('edit-entry').value,
+      spacing: document.getElementById('edit-spacing').value,
+      availability: document.getElementById('edit-availability').value,
+      review: document.getElementById('edit-review').value.trim(),
+    };
+    const { error } = await sb.from('parking_reviews').update(updated).eq('id', id);
+    if (error) { alert('저장 실패: ' + error.message); return; }
+    closeModal();
+    await loadReviews();
+  }
+
+  async function deleteReview(id, name) {
+    if (!confirm(`"${name}" 을(를) 삭제할까요? 되돌릴 수 없어요.`)) return;
+    const { error } = await sb.from('parking_reviews').delete().eq('id', id);
+    if (error) { alert('삭제 실패: ' + error.message); return; }
+    await loadReviews();
+  }
+
+  // 모달 바깥 클릭 시 닫기
+  document.getElementById('edit-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  // 세션 유지 확인
+  if (sessionStorage.getItem('admin_auth') === '1') {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-panel').style.display = 'block';
+    loadReviews();
+  }
+</script>
+</body>
+</html>
