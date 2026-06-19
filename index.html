@@ -30,54 +30,58 @@
 
     /* ── 헤더 ── */
     header {
-      background: #4E7FD4;
-      color: #fff; padding: 40px 0 0; text-align: center; position: relative; overflow: hidden;
-      display: flex; flex-direction: column; align-items: center;
-    }
-    header::before { content: none; }
-    header::after  { content: none; }
-    /* 주차장 하단 칸 */
-    .header-parking-row {
-      width: 100%; height: 64px; margin-top: 28px;
-      display: flex;
-      border-top: 2.5px solid rgba(255,255,255,.4);
-    }
-    .parking-space {
-      flex: 1; display: flex; align-items: center; justify-content: center;
-      border-right: 2px solid rgba(255,255,255,.35);
-      padding: 8px 6px;
-    }
-    .parking-space:last-child { border-right: none; }
-    .car-box {
-      width: 26px; height: 48px; flex-shrink: 0;
-      border-radius: 7px 7px 4px 4px;
+      background: #F5F3EE;
+      color: #2A2A2A;
+      padding: 0; min-height: 180px; text-align: center;
       position: relative; overflow: hidden;
-      box-shadow: 0 3px 8px rgba(0,0,0,.25);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
     }
-    .car-box::before {
-      content: ''; position: absolute;
-      top: 6px; left: 3px; right: 3px; height: 14px;
-      background: rgba(255,255,255,.32); border-radius: 3px 3px 1px 1px;
+    /* 스케치 테두리 */
+    header::before {
+      content: ''; position: absolute; inset: 8px;
+      border: 1.5px solid rgba(180,172,155,.45);
+      border-radius: 3px; pointer-events: none; z-index: 3;
     }
-    .car-box::after {
+    header::after { content: none; }
+    /* 배경 주차 세로 칸 */
+    .header-parking-bg {
+      position: absolute; top: 0; bottom: 0; left: 0; right: 0;
+      display: flex; z-index: 0;
+    }
+    .parking-col {
+      flex: 1; border-right: 1.5px solid rgba(180,172,155,.28);
+      padding: 14px 0 0;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+    }
+    .parking-col:last-child { border-right: none; }
+    /* 자동차 실루엣 (정면 위에서 본 모습) */
+    .car-mini {
+      width: 46px; height: 16px;
+      background: #E8E4DA;
+      border: 1.5px solid rgba(0,0,0,.1);
+      border-radius: 14px 14px 4px 4px;
+      position: relative;
+      box-shadow: 0 2px 6px rgba(0,0,0,.07), inset 0 1px 0 rgba(255,255,255,.5);
+    }
+    .car-mini::before {
       content: ''; position: absolute;
-      bottom: 4px; left: 4px; right: 4px; height: 7px;
-      background: rgba(255,255,255,.18); border-radius: 2px;
+      top: 2px; left: 6px; right: 6px; height: 7px;
+      background: rgba(255,255,255,.65);
+      border-radius: 10px 10px 2px 2px;
     }
     /* P 표지판 */
     .parking-sign {
       display: inline-flex; align-items: center; justify-content: center;
       width: 40px; height: 40px;
-      background: #fff; color: #4E7FD4;
+      background: #4E7FD4; color: #fff;
       font-size: 1.5rem; font-weight: 900;
       border-radius: 8px;
-      box-shadow: 3px 3px 0 rgba(0,0,0,.18);
-      vertical-align: middle;
-      margin-right: 8px;
+      box-shadow: 3px 3px 0 rgba(0,0,0,.15);
+      vertical-align: middle; margin-right: 8px;
       position: relative; bottom: 2px;
       font-family: 'Nadeuri', sans-serif;
     }
-    header h1 { margin: 0; padding: 0 24px; font-size: 2.2rem; font-weight: 700; letter-spacing: -0.02em; position: relative; z-index: 2; font-family: 'Nadeuri', sans-serif; }
+    header h1 { margin: 0; padding: 0 32px; font-size: 2.2rem; font-weight: 700; letter-spacing: -0.02em; position: relative; z-index: 2; font-family: 'Nadeuri', sans-serif; color: #2A2A2A; }
     header h1::before { content: none; }
     header h1::after  { content: none; }
     header p { display: none; }
@@ -297,17 +301,17 @@
 </head>
 <body>
   <header>
-    <h1><span class="parking-sign">P</span>주차쫄지마</h1>
-    <div class="header-parking-row" aria-hidden="true">
-      <div class="parking-space"><div class="car-box" style="background:#F0F0F0"></div></div>
-      <div class="parking-space"></div>
-      <div class="parking-space"><div class="car-box" style="background:#3C3C3C"></div></div>
-      <div class="parking-space"></div>
-      <div class="parking-space"><div class="car-box" style="background:#E85050"></div></div>
-      <div class="parking-space"></div>
-      <div class="parking-space"><div class="car-box" style="background:#FFD23F"></div></div>
-      <div class="parking-space"></div>
+    <div class="header-parking-bg" aria-hidden="true">
+      <div class="parking-col"><div class="car-mini"></div><div class="car-mini"></div></div>
+      <div class="parking-col"><div class="car-mini"></div></div>
+      <div class="parking-col"><div class="car-mini"></div><div class="car-mini"></div></div>
+      <div class="parking-col"></div>
+      <div class="parking-col"><div class="car-mini"></div><div class="car-mini"></div></div>
+      <div class="parking-col"><div class="car-mini"></div></div>
+      <div class="parking-col"></div>
+      <div class="parking-col"><div class="car-mini"></div><div class="car-mini"></div></div>
     </div>
+    <h1><span class="parking-sign">P</span>주차쫄지마</h1>
   </header>
   <main class="hero">
     <div class="page-layout">
