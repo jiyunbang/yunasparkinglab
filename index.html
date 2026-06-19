@@ -447,6 +447,7 @@
       const lat = el.dataset.lat;
       const lon = el.dataset.lon;
       const name = el.dataset.name;
+      const savedUrl = el.dataset.url;
       const ua = navigator.userAgent;
       const encodedName = encodeURIComponent(name);
       if (/Android/i.test(ua)) {
@@ -458,7 +459,9 @@
         }, 1800);
         document.addEventListener('visibilitychange', () => { if (document.hidden) clearTimeout(t); }, { once: true });
       } else {
-        window.open(`https://map.naver.com/v5/directions/-/${lon},${lat},,${encodedName},-/car`, '_blank');
+        // PC: 등록된 네이버지도 URL이 있으면 그대로, 없으면 좌표 검색
+        const pcUrl = savedUrl || `https://map.naver.com/v5/search/${encodedName}`;
+        window.open(pcUrl, '_blank');
       }
     }
 
@@ -805,7 +808,9 @@
           ${review.lat && review.lon ? `
           <div class="nav-actions">
             <a class="nav-btn nav-naver" href="javascript:void(0)"
-               data-lat="${review.lat}" data-lon="${review.lon}" data-name="${review.name.replace(/"/g, '&quot;')}"
+               data-lat="${review.lat}" data-lon="${review.lon}"
+               data-name="${review.name.replace(/"/g, '&quot;')}"
+               data-url="${review.url.replace(/"/g, '&quot;')}"
                onclick="openNaverNavi(this)">🗺 네이버지도로 길찾기</a>
           </div>
           ` : ''}
