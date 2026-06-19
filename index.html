@@ -213,8 +213,6 @@
     }
     .nav-btn:hover { transform: translateY(-1px); opacity: .9; }
     .nav-naver { background: #03C75A; color: #fff; }
-    .nav-kakao { background: #FEE500; color: #3A1D1D; }
-    .nav-tmap  { background: #1E6FFF; color: #fff; }
     /* ── 카드 액션 버튼 ── */
     .card-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
     .card-actions button { flex: 1 1 auto; padding: 10px 14px; border-radius: 10px; border: none; cursor: pointer; font-weight: 700; font-size: 0.88rem; font-family: inherit; transition: transform .15s ease, opacity .15s ease; }
@@ -789,13 +787,7 @@
           <div class="nav-actions">
             <a class="nav-btn nav-naver"
                href="https://m.map.naver.com/directions/?elat=${review.lat}&elng=${review.lon}&ename=${encodeURIComponent(review.name)}&menu=route"
-               target="_blank" rel="noopener">🗺 네이버지도</a>
-            <a class="nav-btn nav-kakao"
-               href="https://map.kakao.com/link/to/${encodeURIComponent(review.name)},${review.lat},${review.lon}"
-               target="_blank" rel="noopener">🟡 카카오내비</a>
-            <a class="nav-btn nav-tmap"
-               href="https://tmap.life/route?goalx=${review.lon}&goaly=${review.lat}&goalname=${encodeURIComponent(review.name)}"
-               target="_blank" rel="noopener">🔵 티맵</a>
+               target="_blank" rel="noopener">🗺 네이버지도로 길찾기</a>
           </div>
           ` : ''}
           <div class="card-actions">
