@@ -443,6 +443,25 @@
 
   <script>
 
+    function openNaverNavi(lat, lon, name) {
+      const ua = navigator.userAgent;
+      const encodedName = encodeURIComponent(name);
+      if (/Android/i.test(ua)) {
+        // 안드로이드: Intent URL → 앱 없으면 플레이스토어로
+        window.location.href = `intent://navigation?dlat=${lat}&dlng=${lon}&dname=${encodedName}&appname=juchakjoljimma#Intent;scheme=nmap;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;package=com.nhn.android.nmap;end`;
+      } else if (/iPhone|iPad|iPod/i.test(ua)) {
+        // iOS: nmap:// 스킴 → 앱 없으면 앱스토어로
+        window.location.href = `nmap://navigation?dlat=${lat}&dlng=${lon}&dname=${encodedName}&appname=juchakjoljimma`;
+        const t = setTimeout(() => {
+          window.location.href = 'https://apps.apple.com/kr/app/id347925099';
+        }, 1800);
+        document.addEventListener('visibilitychange', () => { if (document.hidden) clearTimeout(t); }, { once: true });
+      } else {
+        // PC: 네이버지도 웹
+        window.open(`https://map.naver.com/v5/directions/-/${lon},${lat},,${encodedName},-/car`, '_blank');
+      }
+    }
+
     let naverMap = null;
     let reviewMarkers = [];
     let selectedDifficultyFilter = 'all';
@@ -785,9 +804,8 @@
           <p style="margin-top:12px;"><small>등록일: ${new Date(review.createdAt).toLocaleString()}</small></p>
           ${review.lat && review.lon ? `
           <div class="nav-actions">
-            <a class="nav-btn nav-naver"
-               href="https://m.map.naver.com/directions/?elat=${review.lat}&elng=${review.lon}&ename=${encodeURIComponent(review.name)}&menu=route"
-               target="_blank" rel="noopener">🗺 네이버지도로 길찾기</a>
+            <a class="nav-btn nav-naver" href="#"
+               onclick="openNaverNavi(${review.lat}, ${review.lon}, ${JSON.stringify(review.name)});return false;">🗺 네이버지도로 길찾기</a>
           </div>
           ` : ''}
           <div class="card-actions">
