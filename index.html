@@ -407,22 +407,21 @@
                 <input type="text" id="place-name" placeholder="예: 공덕역 1번출구 주차장" required />
               </label>
               <label>
-                2) Naver 지도 URL:
-                <input type="url" id="place-url" placeholder="https://map.naver.com/..." required />
-                <span class="small">Naver 지도 URL을 붙여넣어 주세요. 좌표가 자동으로 파싱되지 않으면 아래 위치 좌표를 직접 입력해도 됩니다.</span>
-              </label>
-              <label>
-                3) 위치 좌표 <span class="small" style="font-weight:400">(주소 검색 또는 GPS로 자동 입력)</span>:
-                <div class="geocode-row">
-                  <input type="text" id="place-address" placeholder="주소 입력 예: 마포구 공덕동 473-0" />
-                  <button type="button" id="geocode-btn" class="geocode-button">🔍 좌표 검색</button>
-                </div>
+                2) 위치 좌표:
+                <span class="small" id="gps-status" style="font-weight:400">📍 현재 위치를 확인하고 있어요...</span>
                 <div class="coord-row" style="margin-top:8px">
                   <input type="text" id="place-lat" placeholder="위도 예: 37.5468" />
                   <input type="text" id="place-lon" placeholder="경도 예: 126.9526" />
                 </div>
-                <button type="button" id="gps-btn" class="gps-button">📍 현재 위치로 좌표 자동 입력</button>
-                <span class="small">📌 주소를 입력하고 검색하거나, 네이버 지도 URL을 붙여넣거나, 현장에서 GPS 버튼을 눌러주세요.</span>
+                <button type="button" id="gps-btn" class="gps-button">📍 현재 위치로 다시 가져오기</button>
+                <div class="geocode-row" style="margin-top:8px">
+                  <input type="text" id="place-address" placeholder="또는 주소로 검색: 마포구 공덕동 473-0" />
+                  <button type="button" id="geocode-btn" class="geocode-button">🔍 검색</button>
+                </div>
+              </label>
+              <label>
+                3) Naver 지도 URL <span class="small" style="font-weight:400">(선택 · 길찾기 버튼에 사용돼요)</span>:
+                <input type="url" id="place-url" placeholder="https://map.naver.com/... (안 붙여넣어도 등록할 수 있어요)" />
               </label>
               <label style="gap:8px">
                 4) 사진:
@@ -669,6 +668,35 @@
         return null;
       }
       return null;
+    }
+
+    function fetchGpsCoords({ manual = false } = {}) {
+      const btn = document.getElementById('gps-btn');
+      const statusEl = document.getElementById('gps-status');
+      if (!navigator.geolocation) {
+        if (statusEl) statusEl.textContent = '📍 이 브라우저는 위치 서비스를 지원하지 않아요. 주소 검색을 이용해 주세요.';
+        if (manual) alert('이 브라우저는 위치 서비스를 지원하지 않습니다.');
+        return;
+      }
+      if (btn) { btn.disabled = true; }
+      if (statusEl) statusEl.textContent = '📍 현재 위치를 확인하고 있어요...';
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          if (currentEditIndex < 0) {
+            document.getElementById('place-lat').value = pos.coords.latitude.toFixed(6);
+            document.getElementById('place-lon').value = pos.coords.longitude.toFixed(6);
+          }
+          if (btn) btn.disabled = false;
+          if (statusEl) statusEl.textContent = '✅ 현재 위치를 불러왔어요. 주차장 위치와 다르면 직접 수정해 주세요.';
+          if (manual) alert('좌표가 입력되었습니다.\n주차장 위치와 다르다면 직접 수정해 주세요.');
+        },
+        () => {
+          if (btn) btn.disabled = false;
+          if (statusEl) statusEl.textContent = '📍 위치를 가져오지 못했어요. 위치 권한을 허용하거나 주소 검색을 이용해 주세요.';
+          if (manual) alert('위치를 가져올 수 없습니다.\n브라우저에서 위치 권한을 허용해 주세요.');
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
     }
 
     const STORAGE_KEY = 'parkingReviews';
@@ -1108,11 +1136,10 @@ async function handleFormSubmit(event) {
         const photos = photoDataURLs.length ? photoDataURLs : [];
 
         if (!name) return alert('장소명을 입력해 주세요.');
-        if (!url) return alert('위치 URL을 입력해 주세요.');
 
-        // URL에서 좌표 파싱 시도 → 실패하면 수동 입력값 사용
+        // URL이 있으면 좌표 파싱 시도 → 없거나 실패하면 위치 좌표 입력값 사용
         let lat, lon;
-        const urlCoords = parseCoordsFromUrl(url);
+        const urlCoords = url ? parseCoordsFromUrl(url) : null;
         if (urlCoords) {
           lat = urlCoords.lat;
           lon = urlCoords.lon;
@@ -1124,16 +1151,17 @@ async function handleFormSubmit(event) {
           lat = parseFloat(latValue);
           lon = parseFloat(lonValue);
           if (!latValue || !lonValue || Number.isNaN(lat) || Number.isNaN(lon)) {
-            return alert('URL에서 좌표를 파싱할 수 없습니다.\n위치 좌표를 직접 입력해 주세요.');
+            return alert('위치 좌표가 필요해요.\nGPS 버튼을 눌러 현재 위치를 가져오거나, 주소 검색을 이용해 주세요.');
           }
         }
+        const finalUrl = url || `https://map.naver.com/v5/search/${encodeURIComponent(name)}`;
 
         const reviews = USE_SUPABASE ? await fetchReviewsFromSupabase() : getSavedReviews();
         const reviewId = currentEditIndex >= 0 && reviews[currentEditIndex] ? reviews[currentEditIndex].id : crypto.randomUUID ? crypto.randomUUID() : `review-${Date.now()}`;
         const newReview = {
           id: reviewId,
           name,
-          url,
+          url: finalUrl,
           lat,
           lon,
           review,
@@ -1172,6 +1200,7 @@ async function handleFormSubmit(event) {
     document.addEventListener('DOMContentLoaded', async () => {
 
       initNaverMap();
+      fetchGpsCoords();
 
       document.getElementById('review-form').addEventListener('submit', handleFormSubmit);
       document.getElementById('photo-camera-btn').addEventListener('click', () => document.getElementById('place-photo-camera').click());
@@ -1235,28 +1264,7 @@ async function handleFormSubmit(event) {
 
       // GPS 좌표 자동 입력
       document.getElementById('gps-btn').addEventListener('click', () => {
-        const btn = document.getElementById('gps-btn');
-        if (!navigator.geolocation) {
-          alert('이 브라우저는 위치 서비스를 지원하지 않습니다.');
-          return;
-        }
-        btn.disabled = true;
-        btn.textContent = '📍 위치 찾는 중...';
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            document.getElementById('place-lat').value = pos.coords.latitude.toFixed(6);
-            document.getElementById('place-lon').value = pos.coords.longitude.toFixed(6);
-            btn.disabled = false;
-            btn.textContent = '📍 현재 위치로 좌표 자동 입력';
-            alert('좌표가 입력되었습니다.\n주차장 위치와 다르다면 직접 수정해 주세요.');
-          },
-          () => {
-            btn.disabled = false;
-            btn.textContent = '📍 현재 위치로 좌표 자동 입력';
-            alert('위치를 가져올 수 없습니다.\n브라우저에서 위치 권한을 허용해 주세요.');
-          },
-          { enableHighAccuracy: true, timeout: 10000 }
-        );
+        fetchGpsCoords({ manual: true });
       });
 
       // 내 주변 가까운 순 정렬
