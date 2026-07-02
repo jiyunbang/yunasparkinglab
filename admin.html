@@ -226,6 +226,7 @@
               <th>진입로</th>
               <th>간격</th>
               <th>여유</th>
+              <th>비용</th>
               <th>리뷰</th>
               <th>등록일</th>
               <th>관리</th>
@@ -287,6 +288,7 @@
         <option value="자주 만차">자주 만차</option>
       </select>
     </label>
+    <label>주차 비용<input type="text" id="edit-fee" placeholder="예: 무료 / 30분 무료 후 유료" /></label>
     <label>리뷰<textarea id="edit-review"></textarea></label>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal()">취소</button>
@@ -296,7 +298,7 @@
 </div>
 
 <script>
-  const ADMIN_PASSWORD = 'juchak2024'; // ← 비밀번호 여기서 변경
+  const ADMIN_PASSWORD = '0000'; // ← 비밀번호 여기서 변경
   const SUPABASE_URL = 'https://ltqzwqirrasinhomudsl.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_o3AZ3XxmMxx6Xk857kV3pw_ZDTRnbDy';
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -322,10 +324,10 @@
 
   async function loadReviews() {
     const tbody = document.getElementById('reviews-tbody');
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="10">불러오는 중...</td></tr>';
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="11">불러오는 중...</td></tr>';
     const { data, error } = await sb.from('parking_reviews').select('*').order('created_at', { ascending: false });
     if (error) {
-      tbody.innerHTML = `<tr class="empty-row"><td colspan="10">❌ 데이터 불러오기 실패: ${error.message}</td></tr>`;
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="11">❌ 데이터 불러오기 실패: ${error.message}</td></tr>`;
       return;
     }
     allReviews = data || [];
@@ -347,7 +349,7 @@
   function renderTable(reviews) {
     const tbody = document.getElementById('reviews-tbody');
     if (!reviews.length) {
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="10">등록된 주차장이 없습니다.</td></tr>';
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="11">등록된 주차장이 없습니다.</td></tr>';
       return;
     }
     tbody.innerHTML = reviews.map((r, i) => `
@@ -359,6 +361,7 @@
         <td>${r.entry || '-'}</td>
         <td>${r.spacing || '-'}</td>
         <td>${r.availability || '-'}</td>
+        <td>${r.fee || '-'}</td>
         <td class="td-review"><p>${r.review || '-'}</p></td>
         <td class="td-date">${r.created_at ? new Date(r.created_at).toLocaleDateString('ko') : '-'}</td>
         <td class="td-actions">
@@ -382,6 +385,7 @@
     document.getElementById('edit-entry').value = r.entry || '보통';
     document.getElementById('edit-spacing').value = r.spacing || '보통';
     document.getElementById('edit-availability').value = r.availability || '가끔 여유';
+    document.getElementById('edit-fee').value = r.fee || '';
     document.getElementById('edit-review').value = r.review || '';
     document.getElementById('edit-modal').classList.add('open');
   }
@@ -402,6 +406,7 @@
       entry: document.getElementById('edit-entry').value,
       spacing: document.getElementById('edit-spacing').value,
       availability: document.getElementById('edit-availability').value,
+      fee: document.getElementById('edit-fee').value.trim(),
       review: document.getElementById('edit-review').value.trim(),
     };
     const { error } = await sb.from('parking_reviews').update(updated).eq('id', id);

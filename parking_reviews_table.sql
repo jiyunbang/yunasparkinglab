@@ -13,5 +13,11 @@ create table public.parking_reviews (
   availability text,
   difficulty text,
   photos text,
+  fee text default '',
+  fee_photo text,
   created_at timestamptz default now()
 );
+
+-- 기존 테이블에 컬럼 추가할 경우:
+-- ALTER TABLE public.parking_reviews ADD COLUMN fee text DEFAULT '';
+-- ALTER TABLE public.parking_reviews ADD COLUMN fee_photo text;
