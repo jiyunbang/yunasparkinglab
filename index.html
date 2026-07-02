@@ -386,6 +386,18 @@
         </div>
       </aside>
       <div class="main-content">
+        <section class="section map-section">
+          <div class="form-card">
+            <h2>초보자 추천 주차장 한눈에보기</h2>
+            <div class="map-controls">
+              <button type="button" class="filter-chip active" data-filter="all">전체</button>
+              <button type="button" class="filter-chip" data-filter="초록불">초록불</button>
+              <button type="button" class="filter-chip" data-filter="주황불">주황불</button>
+              <button type="button" class="filter-chip" data-filter="빨강불">빨강불</button>
+            </div>
+            <div id="naver-map" class="map-container"></div>
+          </div>
+        </section>
         <section class="section register-section">
           <div class="form-card" id="register-section">
             <h2>주차장 등록 & 리뷰</h2>
@@ -497,18 +509,6 @@
               <button type="button" id="nearby-btn" class="nearby-btn">📍 내 주변 가까운 순으로 보기</button>
             </div>
             <div class="saved-list" id="saved-list"></div>
-          </div>
-        </section>
-        <section class="section map-section">
-          <div class="form-card">
-            <h2>지도 핀 필터</h2>
-            <div class="map-controls">
-              <button type="button" class="filter-chip active" data-filter="all">전체</button>
-              <button type="button" class="filter-chip" data-filter="초록불">초록불</button>
-              <button type="button" class="filter-chip" data-filter="주황불">주황불</button>
-              <button type="button" class="filter-chip" data-filter="빨강불">빨강불</button>
-            </div>
-            <div id="naver-map" class="map-container"></div>
           </div>
         </section>
       </div>
