@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>주차쫄지마 — 관리자</title>
+  <link rel="icon" type="image/png" href="images/favicon-32.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <style>
     @font-face {
@@ -25,10 +27,9 @@
     }
     .login-card .sign {
       display: inline-flex; align-items: center; justify-content: center;
-      width: 56px; height: 56px; background: #4F7DF3; color: #fff;
-      font-size: 2rem; font-weight: 900; border-radius: 12px;
-      box-shadow: 3px 3px 0 rgba(0,0,0,.15); margin-bottom: 16px;
+      width: 64px; height: 64px; margin-bottom: 16px;
     }
+    .login-card .sign img { width: 100%; height: 100%; object-fit: contain; }
     .login-card h1 { margin: 0 0 6px; font-size: 1.5rem; font-weight: 700; color: #1A1A1A; }
     .login-card p { margin: 0 0 28px; font-size: 0.9rem; color: #888; font-weight: 300; }
     .login-card input[type="password"] {
@@ -55,10 +56,10 @@
     .admin-header-left { display: flex; align-items: center; gap: 12px; }
     .admin-sign {
       display: inline-flex; align-items: center; justify-content: center;
-      width: 38px; height: 38px; background: #fff; color: #4F7DF3;
-      font-size: 1.3rem; font-weight: 900; border-radius: 8px;
-      box-shadow: 2px 2px 0 rgba(0,0,0,.15);
+      width: 40px; height: 40px; background: #fff; border-radius: 8px;
+      box-shadow: 2px 2px 0 rgba(0,0,0,.15); padding: 4px;
     }
+    .admin-sign img { width: 100%; height: 100%; object-fit: contain; }
     .admin-header h1 { margin: 0; font-size: 1.4rem; font-weight: 700; }
     .logout-btn {
       padding: 8px 18px; border: 1.5px solid rgba(255,255,255,.5); border-radius: 999px;
@@ -188,7 +189,7 @@
 <!-- 로그인 화면 -->
 <div id="login-screen">
   <div class="login-card">
-    <div class="sign">P</div>
+    <div class="sign"><img src="images/icon-master.png" alt="주차쫄지마" /></div>
     <h1>관리자 로그인</h1>
     <p>주차쫄지마 관리자 전용 페이지입니다.</p>
     <input type="password" id="admin-pw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter') checkLogin()" />
@@ -201,7 +202,7 @@
 <div id="admin-panel">
   <div class="admin-header">
     <div class="admin-header-left">
-      <span class="admin-sign">P</span>
+      <span class="admin-sign"><img src="images/icon-master.png" alt="주차쫄지마" /></span>
       <h1>주차쫄지마 관리자</h1>
     </div>
     <button class="logout-btn" onclick="logout()">로그아웃</button>
