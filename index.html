@@ -269,8 +269,35 @@
     .card-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
     .card-actions button { flex: 1 1 auto; padding: 10px 14px; border-radius: 10px; border: none; cursor: pointer; font-weight: 700; font-size: 0.88rem; font-family: inherit; transition: transform .15s ease, opacity .15s ease; }
     .card-actions button:hover { transform: translateY(-1px); opacity: .9; }
-    .edit-review { background: #4F7DF3; color: #fff; }
-    .delete-review { background: #ff5252; color: #fff; }
+    .request-btn { background: #F0F4FC; color: #4F7DF3; border: 1.5px solid #D6E0F5 !important; }
+    .card-dates { margin: 8px 0 0; color: #999; font-size: 0.78rem; }
+
+    /* ── 수정/삭제 요청 모달 ── */
+    .request-modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1000;
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .request-modal-overlay.open { display: flex; }
+    .request-modal {
+      background: #fff; border-radius: 22px; padding: 28px;
+      width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    }
+    .request-modal h3 { margin: 0 0 18px; font-size: 1.1rem; font-weight: 700; color: #1A1A1A; }
+    .request-type-group { display: flex; gap: 8px; margin-bottom: 16px; }
+    .request-type-btn {
+      flex: 1; padding: 10px; border-radius: 10px; border: 1.5px solid #D6E0F5;
+      background: #F7F9FF; color: #555; font-weight: 700; font-family: inherit; cursor: pointer; transition: all .15s ease;
+    }
+    .request-type-btn.selected { background: #7C6EF0; border-color: #7C6EF0; color: #fff; }
+    .request-modal textarea {
+      width: 100%; min-height: 90px; padding: 11px 13px; border: 1.5px solid #D6E0F5; border-radius: 10px;
+      font-size: 0.92rem; font-family: inherit; font-weight: 300; color: #1A1A1A; outline: none; resize: vertical; box-sizing: border-box;
+    }
+    .request-modal textarea:focus { border-color: #4F7DF3; box-shadow: 0 0 0 3px rgba(79,125,243,.15); }
+    .request-modal-actions { display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; }
+    .request-modal-actions button { padding: 11px 20px; border-radius: 999px; border: none; font-weight: 700; font-family: inherit; cursor: pointer; }
+    .request-cancel-btn { background: #fff; border: 1.5px solid #ccc !important; color: #555; }
+    .request-submit-btn { background: #4F7DF3; color: #fff; }
 
     /* ── 지도 필터 ── */
     .map-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
@@ -425,7 +452,6 @@
                 <span class="small">최대 3장 · 자동 압축</span>
               </label>
               <div id="photo-preview" class="preview-grid"></div>
-              <div id="edit-mode-note" class="speaker-note"></div>
               <label>
                 4) 리뷰:
                 <textarea id="place-review" placeholder="자세한 주차장 경험을 적어주세요."></textarea>
@@ -491,7 +517,6 @@
               </label>
               <div class="form-actions">
                 <button type="submit">주차장 등록하기</button>
-                <button type="button" id="cancel-edit" class="secondary-button" style="display:none;">수정 취소</button>
               </div>
             </form>
             <div class="list-toolbar">
@@ -513,6 +538,23 @@
   <button class="mobile-fab" id="mobile-fab" onclick="document.getElementById('register-section').scrollIntoView({behavior:'smooth'})">
     📝 등록하기
   </button>
+
+  <!-- 수정/삭제 요청 모달 -->
+  <div class="request-modal-overlay" id="request-modal-overlay">
+    <div class="request-modal">
+      <h3 id="request-modal-title">수정/삭제 요청</h3>
+      <input type="hidden" id="request-review-id" />
+      <div class="request-type-group">
+        <button type="button" class="request-type-btn selected" data-type="수정">✏️ 수정 요청</button>
+        <button type="button" class="request-type-btn" data-type="삭제">🗑 삭제 요청</button>
+      </div>
+      <textarea id="request-reason" placeholder="요청 이유를 알려주세요. (예: 요금 정보가 바뀌었어요, 폐업했어요 등)"></textarea>
+      <div class="request-modal-actions">
+        <button type="button" class="request-cancel-btn" id="request-cancel-btn">취소</button>
+        <button type="button" class="request-submit-btn" id="request-submit-btn">요청 보내기</button>
+      </div>
+    </div>
+  </div>
 
   <script>
 
@@ -673,10 +715,8 @@
       if (statusEl) statusEl.textContent = '📍 현재 위치를 확인하고 있어요...';
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          if (currentEditIndex < 0) {
-            document.getElementById('place-lat').value = pos.coords.latitude.toFixed(6);
-            document.getElementById('place-lon').value = pos.coords.longitude.toFixed(6);
-          }
+          document.getElementById('place-lat').value = pos.coords.latitude.toFixed(6);
+          document.getElementById('place-lon').value = pos.coords.longitude.toFixed(6);
           if (btn) btn.disabled = false;
           if (statusEl) statusEl.textContent = '✅ 현재 위치를 불러왔어요. 주차장 위치와 다르면 직접 수정해 주세요.';
           if (manual) alert('좌표가 입력되었습니다.\n주차장 위치와 다르다면 직접 수정해 주세요.');
@@ -794,7 +834,8 @@
         fee: item.fee || '',
         fee_photo: item.fee_photo || null,
         photos: item.photos ? JSON.parse(item.photos) : [],
-        createdAt: item.created_at || new Date().toISOString()
+        createdAt: item.created_at || new Date().toISOString(),
+        updatedAt: item.updated_at || item.created_at || new Date().toISOString()
       }));
     }
 
@@ -817,7 +858,8 @@
           fee: review.fee || '',
           fee_photo: review.fee_photo || null,
           photos: JSON.stringify(review.photos || []),
-          created_at: review.createdAt
+          created_at: review.createdAt,
+          updated_at: review.updatedAt || review.createdAt
         }, { onConflict: 'id' });
       if (error) {
         console.error('Supabase save error', error);
@@ -833,6 +875,27 @@
       if (error) {
         console.error('Supabase delete error', error);
         alert('DB 삭제 실패: Supabase에 연결할 수 없습니다.');
+        return false;
+      }
+      return true;
+    }
+
+    async function submitRequestToSupabase({ reviewId, reviewName, requestType, reason }) {
+      if (!USE_SUPABASE) {
+        alert('이 기능은 데이터베이스 연결이 필요해요.');
+        return false;
+      }
+      const { error } = await supabaseClient.from('parking_requests').insert({
+        id: crypto.randomUUID ? crypto.randomUUID() : `request-${Date.now()}`,
+        review_id: reviewId,
+        review_name: reviewName,
+        request_type: requestType,
+        reason,
+        status: '대기중'
+      });
+      if (error) {
+        console.error('Supabase request insert error', error);
+        alert('요청 전송에 실패했어요. 잠시 후 다시 시도해 주세요.');
         return false;
       }
       return true;
@@ -1009,7 +1072,6 @@
             <strong>리뷰</strong>
             <p>${review.review || '-'}</p>
           </div>
-          <p style="margin-top:12px;"><small>등록일: ${new Date(review.createdAt).toLocaleString()}</small></p>
           ${review.lat && review.lon ? `
           <div class="nav-actions">
             <a class="nav-btn nav-naver" href="javascript:void(0)"
@@ -1020,96 +1082,45 @@
           </div>
           ` : ''}
           <div class="card-actions">
-            <button type="button" class="edit-review" data-index="${index}">수정</button>
-            <button type="button" class="delete-review" data-index="${index}">삭제</button>
+            <button type="button" class="request-btn" data-id="${review.id}" data-name="${review.name.replace(/"/g, '&quot;')}">✏️ 수정/삭제 요청</button>
           </div>
+          <p class="card-dates">등록일: ${new Date(review.createdAt).toLocaleString()} · 수정일: ${new Date(review.updatedAt || review.createdAt).toLocaleString()}</p>
         </div>
       `;
     }
 
     function attachReviewCardEvents() {
-      document.querySelectorAll('.edit-review').forEach(button => {
-        button.addEventListener('click', () => editReview(Number(button.dataset.index)));
-      });
-      document.querySelectorAll('.delete-review').forEach(button => {
-        button.addEventListener('click', () => deleteReview(Number(button.dataset.index)));
+      document.querySelectorAll('.request-btn').forEach(button => {
+        button.addEventListener('click', () => openRequestModal(button.dataset.id, button.dataset.name));
       });
     }
 
-    let currentEditIndex = -1;
+    let selectedRequestType = '수정';
+
+    function openRequestModal(reviewId, reviewName) {
+      document.getElementById('request-review-id').value = reviewId;
+      document.getElementById('request-modal-title').textContent = `${reviewName} · 수정/삭제 요청`;
+      document.getElementById('request-reason').value = '';
+      selectedRequestType = '수정';
+      document.querySelectorAll('.request-type-btn').forEach(b => b.classList.toggle('selected', b.dataset.type === '수정'));
+      document.getElementById('request-modal-overlay').classList.add('open');
+    }
+
+    function closeRequestModal() {
+      document.getElementById('request-modal-overlay').classList.remove('open');
+    }
+
     let feePhotoData = null;
     let photoDataURLs = [];
 
-    function updateEditModeNote() {
-      const note = document.getElementById('edit-mode-note');
-      note.textContent = currentEditIndex >= 0 ? '현재 수정 모드입니다. 새 사진을 선택하지 않으면 기존 사진이 유지됩니다.' : '';
-    }
-
     function resetFormState() {
-      currentEditIndex = -1;
       document.getElementById('review-form').reset();
-      updateEditModeNote();
-      document.getElementById('review-form').querySelector('button[type="submit"]').textContent = '주차장 등록하기';
-      document.getElementById('cancel-edit').style.display = 'none';
       feePhotoData = null;
       photoDataURLs = [];
       renderPhotoPreview();
       document.querySelectorAll('.fee-tag-btn').forEach(b => b.classList.remove('selected'));
       document.getElementById('review-fee').value = '';
       document.getElementById('fee-photo-preview').style.display = 'none';
-    }
-
-    async function editReview(index) {
-      const reviews = USE_SUPABASE ? await fetchReviewsFromSupabase() : getSavedReviews();
-      const review = reviews[index];
-      if (!review) return;
-      currentEditIndex = index;
-      document.getElementById('place-name').value = review.name;
-      document.getElementById('place-url').value = review.url;
-      document.getElementById('place-lat').value = review.lat || '';
-      document.getElementById('place-lon').value = review.lon || '';
-      document.getElementById('place-review').value = review.review;
-      document.getElementById('review-mechanical').value = review.mechanical;
-      document.getElementById('review-entry').value = review.entry;
-      document.getElementById('review-spacing').value = review.spacing;
-      document.getElementById('review-availability').value = review.availability;
-      document.getElementById('review-difficulty').value = review.difficulty;
-      const feeVal = review.fee || '';
-      const feeInput = document.getElementById('review-fee');
-      document.querySelectorAll('.fee-tag-btn').forEach(b => b.classList.remove('selected'));
-      feePhotoData = review.fee_photo || null;
-      if (feePhotoData) {
-        document.getElementById('fee-photo-img').src = feePhotoData;
-        document.getElementById('fee-photo-preview').style.display = 'flex';
-        document.getElementById('fee-photo-btn').classList.add('selected');
-        feeInput.value = '';
-      } else {
-        document.getElementById('fee-photo-preview').style.display = 'none';
-        const matchingTag = document.querySelector(`.fee-tag-btn[data-value="${CSS.escape(feeVal)}"]`);
-        if (matchingTag) matchingTag.classList.add('selected');
-        feeInput.value = feeVal;
-      }
-      document.getElementById('review-form').querySelector('button[type="submit"]').textContent = '수정 저장';
-      document.getElementById('cancel-edit').style.display = 'inline-flex';
-      photoDataURLs = review.photos ? [...review.photos] : [];
-      renderPhotoPreview();
-      updateEditModeNote();
-      window.location.hash = '#register-section';
-    }
-
-    async function deleteReview(index) {
-      if (!confirm('이 리뷰를 삭제하시겠어요?')) return;
-      const reviews = USE_SUPABASE ? await fetchReviewsFromSupabase() : getSavedReviews();
-      const review = reviews[index];
-      if (!review) return;
-      reviews.splice(index, 1);
-      const localSaveOk = saveReviews(reviews);
-      if (USE_SUPABASE) {
-        await deleteReviewFromSupabase(review.id);
-      } else if (!localSaveOk) {
-        return;
-      }
-      renderSavedReviews();
     }
 
 async function handleFormSubmit(event) {
@@ -1148,9 +1159,9 @@ async function handleFormSubmit(event) {
         const finalUrl = url || `https://map.naver.com/v5/search/${encodeURIComponent(name)}`;
 
         const reviews = USE_SUPABASE ? await fetchReviewsFromSupabase() : getSavedReviews();
-        const reviewId = currentEditIndex >= 0 && reviews[currentEditIndex] ? reviews[currentEditIndex].id : crypto.randomUUID ? crypto.randomUUID() : `review-${Date.now()}`;
+        const nowIso = new Date().toISOString();
         const newReview = {
-          id: reviewId,
+          id: crypto.randomUUID ? crypto.randomUUID() : `review-${Date.now()}`,
           name,
           url: finalUrl,
           lat,
@@ -1162,18 +1173,14 @@ async function handleFormSubmit(event) {
           availability,
           difficulty,
           fee,
-          fee_photo: feePhotoData || (currentEditIndex >= 0 ? (reviews[currentEditIndex] && reviews[currentEditIndex].fee_photo) || null : null),
+          fee_photo: feePhotoData || null,
           photos,
-          createdAt: currentEditIndex >= 0 ? (reviews[currentEditIndex] && reviews[currentEditIndex].createdAt) || new Date().toISOString() : new Date().toISOString()
+          createdAt: nowIso,
+          updatedAt: nowIso
         };
 
-        if (currentEditIndex >= 0) {
-          reviews[currentEditIndex] = newReview;
-          alert('주차장 리뷰가 수정되었습니다!');
-        } else {
-          reviews.unshift(newReview);
-          alert('주차장 리뷰가 등록되었습니다!');
-        }
+        reviews.unshift(newReview);
+        alert('주차장 리뷰가 등록되었습니다!');
         const localSaveOk = saveReviews(reviews);
         if (USE_SUPABASE) {
           await upsertReviewToSupabase(newReview);
@@ -1193,6 +1200,31 @@ async function handleFormSubmit(event) {
       initNaverMap();
       fetchGpsCoords();
 
+      document.querySelectorAll('.request-type-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          selectedRequestType = btn.dataset.type;
+          document.querySelectorAll('.request-type-btn').forEach(b => b.classList.toggle('selected', b === btn));
+        });
+      });
+      document.getElementById('request-cancel-btn').addEventListener('click', closeRequestModal);
+      document.getElementById('request-modal-overlay').addEventListener('click', (e) => {
+        if (e.target.id === 'request-modal-overlay') closeRequestModal();
+      });
+      document.getElementById('request-submit-btn').addEventListener('click', async () => {
+        const reviewId = document.getElementById('request-review-id').value;
+        const reviewName = document.getElementById('request-modal-title').textContent.split(' · ')[0];
+        const reason = document.getElementById('request-reason').value.trim();
+        if (!reason) { alert('요청 이유를 입력해 주세요.'); return; }
+        const submitBtn = document.getElementById('request-submit-btn');
+        submitBtn.disabled = true;
+        const ok = await submitRequestToSupabase({ reviewId, reviewName, requestType: selectedRequestType, reason });
+        submitBtn.disabled = false;
+        if (ok) {
+          alert('요청이 접수됐어요. 관리자가 확인 후 처리해 드릴게요.');
+          closeRequestModal();
+        }
+      });
+
       document.getElementById('review-form').addEventListener('submit', handleFormSubmit);
       document.getElementById('photo-camera-btn').addEventListener('click', () => document.getElementById('place-photo-camera').click());
       document.getElementById('photo-gallery-btn').addEventListener('click', () => document.getElementById('place-photo-gallery').click());
@@ -1208,7 +1240,6 @@ async function handleFormSubmit(event) {
           }
         }
       });
-      document.getElementById('cancel-edit').addEventListener('click', resetFormState);
 
       // 비용 태그 클릭
       document.getElementById('fee-tag-group').addEventListener('click', e => {

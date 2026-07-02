@@ -131,7 +131,16 @@
     .action-btn:hover { transform: translateY(-1px); opacity: .9; }
     .btn-edit { background: #4F7DF3; color: #fff; margin-right: 6px; }
     .btn-delete { background: #ff5252; color: #fff; }
+    .btn-resolve { background: #F0F4FC; color: #4F7DF3; margin-right: 6px; }
     .td-actions { white-space: nowrap; }
+
+    .request-type-badge { display: inline-flex; padding: 4px 10px; border-radius: 999px; font-size: 0.8rem; font-weight: 700; color: #fff; white-space: nowrap; }
+    .request-type-edit { background: #4F7DF3; }
+    .request-type-delete { background: #ff5252; }
+    .status-badge { display: inline-flex; padding: 4px 10px; border-radius: 999px; font-size: 0.8rem; font-weight: 700; white-space: nowrap; }
+    .status-pending { background: #FFF3D6; color: #A56B00; }
+    .status-resolved { background: #EAF7EE; color: #1E8E4E; }
+    .td-reason { max-width: 240px; color: #555; }
 
     .empty-row td { text-align: center; padding: 40px; color: #aaa; font-size: 0.95rem; }
 
@@ -204,6 +213,28 @@
       <div class="stat-chip"><span>🟢</span> 초록불 <strong id="cnt-green">-</strong>개</div>
       <div class="stat-chip"><span>🟠</span> 주황불 <strong id="cnt-orange">-</strong>개</div>
       <div class="stat-chip"><span>🔴</span> 빨강불 <strong id="cnt-red">-</strong>개</div>
+    </div>
+
+    <div class="table-card" style="margin-bottom:24px;">
+      <div class="table-toolbar">
+        <h2 id="requests-title">🔔 수정/삭제 요청</h2>
+        <button class="refresh-btn" onclick="loadRequests()">🔄 새로고침</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>장소명</th>
+              <th>유형</th>
+              <th>사유</th>
+              <th>요청일</th>
+              <th>상태</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody id="requests-tbody"></tbody>
+        </table>
+      </div>
     </div>
 
     <div class="table-card">
@@ -306,6 +337,7 @@
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('admin-panel').style.display = 'block';
       loadReviews();
+      loadRequests();
     } else {
       document.getElementById('login-error').style.display = 'block';
     }
@@ -340,6 +372,58 @@
 
   function badgeClass(d) {
     return d === '초록불' ? 'green-badge' : d === '주황불' ? 'yellow-badge' : 'red-badge';
+  }
+
+  let allRequests = [];
+
+  async function loadRequests() {
+    const tbody = document.getElementById('requests-tbody');
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">불러오는 중...</td></tr>';
+    const { data, error } = await sb.from('parking_requests').select('*').order('created_at', { ascending: false });
+    if (error) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="6">❌ 요청 목록 불러오기 실패: ${error.message}</td></tr>`;
+      return;
+    }
+    allRequests = data || [];
+    renderRequestsTable(allRequests);
+    const pendingCount = allRequests.filter(r => r.status === '대기중').length;
+    document.getElementById('requests-title').textContent = pendingCount > 0
+      ? `🔔 수정/삭제 요청 (${pendingCount}건 대기중)`
+      : '🔔 수정/삭제 요청';
+  }
+
+  function renderRequestsTable(requests) {
+    const tbody = document.getElementById('requests-tbody');
+    if (!requests.length) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="6">접수된 요청이 없습니다.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = requests.map(r => `
+      <tr>
+        <td class="td-name">${r.review_name}</td>
+        <td><span class="request-type-badge ${r.request_type === '삭제' ? 'request-type-delete' : 'request-type-edit'}">${r.request_type}</span></td>
+        <td class="td-reason">${r.reason}</td>
+        <td class="td-date">${r.created_at ? new Date(r.created_at).toLocaleString('ko') : '-'}</td>
+        <td><span class="status-badge ${r.status === '처리완료' ? 'status-resolved' : 'status-pending'}">${r.status}</span></td>
+        <td class="td-actions">
+          ${r.status === '대기중' ? `
+            <button class="action-btn btn-edit" onclick="openEdit('${r.review_id}')">리뷰 수정</button>
+            <button class="action-btn btn-delete" onclick="deleteReview('${r.review_id}', '${r.review_name.replace(/'/g, "\\'")}')">리뷰 삭제</button>
+            <button class="action-btn btn-resolve" onclick="resolveRequest('${r.id}')">처리완료</button>
+          ` : '-'}
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function resolveRequest(id) {
+    const { error } = await sb.from('parking_requests').update({ status: '처리완료' }).eq('id', id);
+    if (error) { alert('처리 실패: ' + error.message); return; }
+    await loadRequests();
+  }
+
+  async function resolveRequestsForReview(reviewId) {
+    await sb.from('parking_requests').update({ status: '처리완료' }).eq('review_id', reviewId).eq('status', '대기중');
   }
 
   function renderTable(reviews) {
@@ -404,11 +488,14 @@
       availability: document.getElementById('edit-availability').value,
       fee: document.getElementById('edit-fee').value.trim(),
       review: document.getElementById('edit-review').value.trim(),
+      updated_at: new Date().toISOString(),
     };
     const { error } = await sb.from('parking_reviews').update(updated).eq('id', id);
     if (error) { alert('저장 실패: ' + error.message); return; }
+    await resolveRequestsForReview(id);
     closeModal();
     await loadReviews();
+    await loadRequests();
   }
 
   async function deleteReview(id, name) {
@@ -416,6 +503,7 @@
     const { error } = await sb.from('parking_reviews').delete().eq('id', id);
     if (error) { alert('삭제 실패: ' + error.message); return; }
     await loadReviews();
+    await loadRequests();
   }
 
   // 모달 바깥 클릭 시 닫기
@@ -428,6 +516,7 @@
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('admin-panel').style.display = 'block';
     loadReviews();
+    loadRequests();
   }
 </script>
 </body>
