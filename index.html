@@ -241,6 +241,25 @@
     .request-cancel-btn { background: #fff; border: 1.5px solid #ccc !important; color: #555; }
     .request-submit-btn { background: #4F7DF3; color: #fff; }
 
+    /* ── 동네 검색 ── */
+    .neighborhood-search-row { display: flex; gap: 8px; margin-bottom: 12px; }
+    .neighborhood-search-row input { flex: 1; }
+    .neighborhood-search-btn {
+      white-space: nowrap; padding: 12px 16px; border: none;
+      border-radius: 12px; background: #4F7DF3;
+      color: #fff; cursor: pointer; font-size: 0.93rem; font-weight: 700; font-family: inherit;
+      transition: all .18s ease;
+    }
+    .neighborhood-search-btn:hover { background: #3D63C9; transform: translateY(-1px); }
+    .neighborhood-search-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .neighborhood-reset-btn {
+      white-space: nowrap; padding: 12px 16px; border: 1.5px solid #D6E0F5;
+      border-radius: 12px; background: #fff; color: #555; cursor: pointer;
+      font-size: 0.88rem; font-weight: 700; font-family: inherit; transition: all .18s ease;
+    }
+    .neighborhood-reset-btn:hover { background: #F7F9FF; border-color: #aaa; }
+    .neighborhood-search-status { margin: -4px 0 14px; font-size: 0.85rem; color: #4F7DF3; font-weight: 700; }
+
     /* ── 지도 필터 ── */
     .map-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
     .filter-chip { border: 1.5px solid #D6E0F5; border-radius: 999px; background: #F7F9FF; color: #555; padding: 9px 18px; cursor: pointer; font-weight: 600; font-size: 0.9rem; font-family: inherit; transition: all .18s ease; }
@@ -307,6 +326,12 @@
         <section class="section map-section">
           <div class="form-card">
             <h2>초보자 추천 주차장 한눈에보기</h2>
+            <div class="neighborhood-search-row">
+              <input type="text" id="neighborhood-search-input" placeholder="동네/주소로 검색 (예: 마포구 공덕동)" />
+              <button type="button" id="neighborhood-search-btn" class="neighborhood-search-btn">🔍 동네 검색</button>
+              <button type="button" id="neighborhood-reset-btn" class="neighborhood-reset-btn" style="display:none">✕ 초기화</button>
+            </div>
+            <p class="neighborhood-search-status" id="neighborhood-search-status" style="display:none"></p>
             <div class="map-controls">
               <button type="button" class="filter-chip active" data-filter="all">전체</button>
               <button type="button" class="filter-chip" data-filter="초록불">초록불</button>
@@ -500,6 +525,10 @@
     let selectedDifficultyFilter = 'all';
     let userLocation = null;
     let nearbySortEnabled = false;
+    let neighborhoodLocation = null;
+    let neighborhoodSearchActive = false;
+    let neighborhoodLabel = '';
+    const NEIGHBORHOOD_RADIUS_METERS = 5000;
 
     function haversineDistance(lat1, lon1, lat2, lon2) {
       const R = 6371000;
@@ -512,6 +541,77 @@
 
     function formatDistance(meters) {
       return meters < 1000 ? `${Math.round(meters)}m` : `${(meters / 1000).toFixed(1)}km`;
+    }
+
+    async function searchNeighborhood() {
+      const input = document.getElementById('neighborhood-search-input');
+      const btn = document.getElementById('neighborhood-search-btn');
+      const resetBtn = document.getElementById('neighborhood-reset-btn');
+      const statusEl = document.getElementById('neighborhood-search-status');
+      const query = input.value.trim();
+      if (!query) { alert('동네 이름이나 주소를 입력해 주세요.'); return; }
+      btn.disabled = true;
+      btn.textContent = '🔍 검색 중...';
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&countrycodes=kr&limit=1`,
+          { headers: { 'Accept-Language': 'ko' } }
+        );
+        const data = await res.json();
+        if (!data || !data.length) {
+          alert('해당 동네/주소를 찾을 수 없습니다.\n더 구체적으로 입력해 보세요. 예: 서울 마포구 공덕동');
+          return;
+        }
+        const lat = parseFloat(data[0].lat);
+        const lon = parseFloat(data[0].lon);
+        neighborhoodLocation = { lat, lon };
+        neighborhoodSearchActive = true;
+        neighborhoodLabel = query;
+
+        // GPS 내 주변 정렬과 동시에 켜지지 않도록 해제
+        if (nearbySortEnabled) {
+          nearbySortEnabled = false;
+          const nearbyBtn = document.getElementById('nearby-btn');
+          nearbyBtn.classList.remove('active');
+          nearbyBtn.textContent = '📍 내 주변 가까운 순으로 보기';
+        }
+
+        resetBtn.style.display = '';
+        statusEl.style.display = '';
+        statusEl.textContent = `📍 "${data[0].display_name}" 주변 ${NEIGHBORHOOD_RADIUS_METERS / 1000}km 이내로 보고 있어요.`;
+
+        // 목록 재정렬/필터링은 지도 상태와 무관하게 항상 반영
+        renderReviewList(currentReviews);
+
+        // 지도 이동/마커 갱신은 실패해도 위 목록 갱신에 영향 없도록 분리
+        try {
+          if (naverMap && typeof naver !== 'undefined' && naver.maps) {
+            naverMap.setCenter(new naver.maps.LatLng(lat, lon));
+            naverMap.setZoom(15);
+          }
+          renderMapMarkers(currentReviews);
+        } catch (mapError) {
+          console.error('지도 갱신 실패', mapError);
+        }
+      } catch (e) {
+        alert('검색 중 오류가 발생했습니다.\n인터넷 연결을 확인해 주세요.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🔍 동네 검색';
+      }
+    }
+
+    function resetNeighborhoodSearch() {
+      neighborhoodLocation = null;
+      neighborhoodSearchActive = false;
+      neighborhoodLabel = '';
+      document.getElementById('neighborhood-search-input').value = '';
+      document.getElementById('neighborhood-reset-btn').style.display = 'none';
+      const statusEl = document.getElementById('neighborhood-search-status');
+      statusEl.style.display = 'none';
+      statusEl.textContent = '';
+      renderMapMarkers(currentReviews);
+      renderReviewList(currentReviews);
     }
 
     function setDifficultyFilter(value) {
@@ -586,7 +686,7 @@
         bounds.extend(position);
         hasAny = true;
       });
-      if (hasAny) naverMap.fitBounds(bounds);
+      if (hasAny && !neighborhoodSearchActive) naverMap.fitBounds(bounds);
     }
 
 
@@ -909,13 +1009,21 @@
         return;
       }
       let items = filtered.map(review => ({ review, distance: null }));
-      if (nearbySortEnabled && userLocation) {
+      const sortLocation = neighborhoodSearchActive && neighborhoodLocation
+        ? neighborhoodLocation
+        : (nearbySortEnabled && userLocation ? userLocation : null);
+      if (sortLocation) {
         items = filtered
           .filter(review => review.lat && review.lon)
-          .map(review => ({ review, distance: haversineDistance(userLocation.lat, userLocation.lon, review.lat, review.lon) }))
+          .map(review => ({ review, distance: haversineDistance(sortLocation.lat, sortLocation.lon, review.lat, review.lon) }))
           .sort((a, b) => a.distance - b.distance);
+        if (neighborhoodSearchActive) {
+          items = items.filter(item => item.distance <= NEIGHBORHOOD_RADIUS_METERS);
+        }
         if (!items.length) {
-          savedList.innerHTML = '<p>좌표가 등록된 주차장이 없어서 거리순 정렬을 할 수 없어요.</p>';
+          savedList.innerHTML = neighborhoodSearchActive
+            ? `<p>"${neighborhoodLabel}" 근처(${NEIGHBORHOOD_RADIUS_METERS / 1000}km 이내)에 등록된 주차장이 없어요.</p>`
+            : '<p>좌표가 등록된 주차장이 없어서 거리순 정렬을 할 수 없어요.</p>';
           return;
         }
       }
@@ -1201,6 +1309,13 @@ async function handleFormSubmit(event) {
         button.addEventListener('click', () => setDifficultyFilter(button.dataset.filter));
       });
 
+      // 동네 검색
+      document.getElementById('neighborhood-search-btn').addEventListener('click', searchNeighborhood);
+      document.getElementById('neighborhood-reset-btn').addEventListener('click', resetNeighborhoodSearch);
+      document.getElementById('neighborhood-search-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); searchNeighborhood(); }
+      });
+
       // GPS 좌표 자동 입력
       document.getElementById('gps-btn').addEventListener('click', () => {
         fetchGpsCoords({ manual: true });
@@ -1226,6 +1341,17 @@ async function handleFormSubmit(event) {
           (pos) => {
             userLocation = { lat: pos.coords.latitude, lon: pos.coords.longitude };
             nearbySortEnabled = true;
+
+            // 동네 검색과 동시에 켜지지 않도록 해제
+            if (neighborhoodSearchActive) {
+              neighborhoodSearchActive = false;
+              neighborhoodLocation = null;
+              document.getElementById('neighborhood-search-input').value = '';
+              document.getElementById('neighborhood-reset-btn').style.display = 'none';
+              document.getElementById('neighborhood-search-status').style.display = 'none';
+              renderMapMarkers(currentReviews);
+            }
+
             btn.disabled = false;
             btn.classList.add('active');
             btn.textContent = '📍 가까운 순 정렬 중 (해제하려면 클릭)';
