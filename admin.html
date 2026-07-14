@@ -175,11 +175,56 @@
     .btn-cancel { padding: 12px 20px; border: 1.5px solid #ccc; border-radius: 999px; background: #fff; color: #555; font-size: 0.95rem; font-weight: 700; font-family: inherit; cursor: pointer; transition: all .18s; }
     .btn-cancel:hover { background: #EEF2FB; }
 
+    /* ── 탭 ── */
+    .admin-tabs {
+      display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
+    }
+    .admin-tab-btn {
+      padding: 10px 20px; border: 1.5px solid #DCE4F5; border-radius: 999px;
+      background: #fff; color: #555; font-size: 0.92rem; font-weight: 700;
+      font-family: inherit; cursor: pointer; transition: all .18s;
+    }
+    .admin-tab-btn:hover { background: #F0F4FC; }
+    .admin-tab-btn.active { background: #4F7DF3; border-color: #4F7DF3; color: #fff; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── IP 접속 제어 ── */
+    .ip-current-box {
+      background: #fff; border: 1px solid #DCE4F5; border-radius: 12px;
+      padding: 14px 20px; margin-bottom: 20px; display: flex; align-items: center;
+      gap: 12px; flex-wrap: wrap; font-size: 0.9rem;
+    }
+    .ip-current-box strong { font-family: monospace; font-size: 1rem; color: #4F7DF3; }
+    .ip-add-form {
+      display: flex; gap: 10px; padding: 16px 20px; border-bottom: 1px solid #EEF2FB;
+      flex-wrap: wrap;
+    }
+    .ip-add-form input {
+      padding: 10px 14px; border: 1.5px solid #D6E0F5; border-radius: 10px;
+      font-size: 0.9rem; font-family: inherit; outline: none;
+    }
+    .ip-add-form input:focus { border-color: #4F7DF3; box-shadow: 0 0 0 3px rgba(79,125,243,.12); }
+    .ip-add-form input#ip-input { width: 200px; font-family: monospace; }
+    .ip-add-form input#ip-memo-input { flex: 1; min-width: 140px; }
+    .ip-add-form button {
+      padding: 10px 20px; border: none; border-radius: 10px; background: #4F7DF3;
+      color: #fff; font-size: 0.9rem; font-weight: 700; font-family: inherit; cursor: pointer;
+    }
+    .ip-add-form button:hover { background: #3D63C9; }
+    .ip-warning {
+      background: #FFF3D6; color: #A56B00; border-radius: 12px; padding: 12px 18px;
+      margin-bottom: 20px; font-size: 0.88rem; font-weight: 700; display: none;
+    }
+    .ip-warning.show { display: block; }
+    .td-ip { font-family: monospace; font-weight: 700; }
+
     @media (max-width: 600px) {
       .admin-body { padding: 16px; }
       .admin-header { padding: 16px; }
       .modal { padding: 20px; }
       .modal-grid { grid-template-columns: 1fr; }
+      .ip-add-form input#ip-input { width: 100%; }
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
@@ -209,59 +254,98 @@
   </div>
 
   <div class="admin-body">
-    <div class="stats-bar" id="stats-bar">
-      <div class="stat-chip"><span>📋</span> 전체 <strong id="cnt-all">-</strong>개</div>
-      <div class="stat-chip"><span>🟢</span> 초록불 <strong id="cnt-green">-</strong>개</div>
-      <div class="stat-chip"><span>🟠</span> 주황불 <strong id="cnt-orange">-</strong>개</div>
-      <div class="stat-chip"><span>🔴</span> 빨강불 <strong id="cnt-red">-</strong>개</div>
+    <div class="admin-tabs">
+      <button class="admin-tab-btn active" id="tab-btn-dashboard" onclick="switchTab('dashboard')">📋 대시보드</button>
+      <button class="admin-tab-btn" id="tab-btn-ip" onclick="switchTab('ip')">🔒 IP 접속 제어</button>
     </div>
 
-    <div class="table-card" style="margin-bottom:24px;">
-      <div class="table-toolbar">
-        <h2 id="requests-title">🔔 수정/삭제 요청</h2>
-        <button class="refresh-btn" onclick="loadRequests()">🔄 새로고침</button>
+    <div class="tab-panel active" id="tab-dashboard">
+      <div class="stats-bar" id="stats-bar">
+        <div class="stat-chip"><span>📋</span> 전체 <strong id="cnt-all">-</strong>개</div>
+        <div class="stat-chip"><span>🟢</span> 초록불 <strong id="cnt-green">-</strong>개</div>
+        <div class="stat-chip"><span>🟠</span> 주황불 <strong id="cnt-orange">-</strong>개</div>
+        <div class="stat-chip"><span>🔴</span> 빨강불 <strong id="cnt-red">-</strong>개</div>
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>장소명</th>
-              <th>유형</th>
-              <th>사유</th>
-              <th>요청일</th>
-              <th>상태</th>
-              <th>관리</th>
-            </tr>
-          </thead>
-          <tbody id="requests-tbody"></tbody>
-        </table>
+
+      <div class="table-card" style="margin-bottom:24px;">
+        <div class="table-toolbar">
+          <h2 id="requests-title">🔔 수정/삭제 요청</h2>
+          <button class="refresh-btn" onclick="loadRequests()">🔄 새로고침</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>장소명</th>
+                <th>유형</th>
+                <th>사유</th>
+                <th>요청일</th>
+                <th>상태</th>
+                <th>관리</th>
+              </tr>
+            </thead>
+            <tbody id="requests-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-toolbar">
+          <h2>등록된 주차장 전체 목록</h2>
+          <button class="refresh-btn" onclick="loadReviews()">🔄 새로고침</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>장소명</th>
+                <th>난이도</th>
+                <th>기계식</th>
+                <th>진입로</th>
+                <th>간격</th>
+                <th>여유</th>
+                <th>비용</th>
+                <th>리뷰</th>
+                <th>등록일</th>
+                <th>관리</th>
+              </tr>
+            </thead>
+            <tbody id="reviews-tbody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <div class="table-card">
-      <div class="table-toolbar">
-        <h2>등록된 주차장 전체 목록</h2>
-        <button class="refresh-btn" onclick="loadReviews()">🔄 새로고침</button>
+    <div class="tab-panel" id="tab-ip">
+      <div class="ip-warning" id="ip-empty-warning">⚠️ 등록된 허용 IP가 없습니다. IP를 하나도 등록하지 않으면 접속 제한이 아직 적용되지 않은 상태예요. 아래에서 본인 IP를 지금 등록하세요.</div>
+      <div class="ip-current-box">
+        내 현재 접속 IP: <strong id="my-ip">확인 중...</strong>
+        <button class="refresh-btn" onclick="fillMyIp()">이 IP 입력창에 채우기</button>
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>장소명</th>
-              <th>난이도</th>
-              <th>기계식</th>
-              <th>진입로</th>
-              <th>간격</th>
-              <th>여유</th>
-              <th>비용</th>
-              <th>리뷰</th>
-              <th>등록일</th>
-              <th>관리</th>
-            </tr>
-          </thead>
-          <tbody id="reviews-tbody"></tbody>
-        </table>
+      <div class="table-card">
+        <div class="table-toolbar">
+          <h2>허용된 IP 목록</h2>
+          <button class="refresh-btn" onclick="loadAllowedIps()">🔄 새로고침</button>
+        </div>
+        <div class="ip-add-form">
+          <input type="text" id="ip-input" placeholder="예: 123.123.123.123" />
+          <input type="text" id="ip-memo-input" placeholder="메모 (예: 집, 사무실)" />
+          <button onclick="addAllowedIp()">추가</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>IP 주소</th>
+                <th>메모</th>
+                <th>등록일</th>
+                <th>관리</th>
+              </tr>
+            </thead>
+            <tbody id="ips-tbody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -339,9 +423,79 @@
       document.getElementById('admin-panel').style.display = 'block';
       loadReviews();
       loadRequests();
+      loadAllowedIps();
+      fetchMyIp();
     } else {
       document.getElementById('login-error').style.display = 'block';
     }
+  }
+
+  function switchTab(name) {
+    document.getElementById('tab-dashboard').classList.toggle('active', name === 'dashboard');
+    document.getElementById('tab-ip').classList.toggle('active', name === 'ip');
+    document.getElementById('tab-btn-dashboard').classList.toggle('active', name === 'dashboard');
+    document.getElementById('tab-btn-ip').classList.toggle('active', name === 'ip');
+  }
+
+  let myIp = null;
+
+  async function fetchMyIp() {
+    try {
+      const res = await fetch('https://api.ipify.org?format=json');
+      const data = await res.json();
+      myIp = data.ip;
+      document.getElementById('my-ip').textContent = myIp;
+    } catch (e) {
+      document.getElementById('my-ip').textContent = '확인 실패';
+    }
+  }
+
+  function fillMyIp() {
+    if (myIp) document.getElementById('ip-input').value = myIp;
+  }
+
+  async function loadAllowedIps() {
+    const tbody = document.getElementById('ips-tbody');
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="4">불러오는 중...</td></tr>';
+    const { data, error } = await sb.from('admin_allowed_ips').select('*').order('created_at', { ascending: false });
+    if (error) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="4">❌ 불러오기 실패: ${error.message}</td></tr>`;
+      return;
+    }
+    const ips = data || [];
+    document.getElementById('ip-empty-warning').classList.toggle('show', ips.length === 0);
+    if (!ips.length) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="4">등록된 IP가 없습니다.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = ips.map(row => `
+      <tr>
+        <td class="td-ip">${row.ip}</td>
+        <td>${row.memo || '-'}</td>
+        <td class="td-date">${row.created_at ? new Date(row.created_at).toLocaleString('ko') : '-'}</td>
+        <td class="td-actions"><button class="action-btn btn-delete" onclick="deleteAllowedIp('${row.id}')">삭제</button></td>
+      </tr>
+    `).join('');
+  }
+
+  async function addAllowedIp() {
+    const ip = document.getElementById('ip-input').value.trim();
+    const memo = document.getElementById('ip-memo-input').value.trim();
+    if (!ip) { alert('IP 주소를 입력하세요.'); return; }
+    const { error } = await sb.from('admin_allowed_ips').insert({
+      id: crypto.randomUUID(), ip, memo,
+    });
+    if (error) { alert('추가 실패: ' + error.message); return; }
+    document.getElementById('ip-input').value = '';
+    document.getElementById('ip-memo-input').value = '';
+    await loadAllowedIps();
+  }
+
+  async function deleteAllowedIp(id) {
+    if (!confirm('이 IP를 허용 목록에서 삭제할까요?')) return;
+    const { error } = await sb.from('admin_allowed_ips').delete().eq('id', id);
+    if (error) { alert('삭제 실패: ' + error.message); return; }
+    await loadAllowedIps();
   }
 
   function logout() {
@@ -518,6 +672,8 @@
     document.getElementById('admin-panel').style.display = 'block';
     loadReviews();
     loadRequests();
+    loadAllowedIps();
+    fetchMyIp();
   }
 </script>
 </body>
